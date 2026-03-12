@@ -968,7 +968,9 @@ function renderClients(list) {
     }
     const clientProjects = getProjectsForClient(c.name);
     const projHTML = clientProjects.length
-      ? clientProjects.map(p => `<span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);margin:1px 2px 1px 0;white-space:nowrap">${esc(p)}</span>`).join('')
+      ? `<select onclick="event.stopPropagation()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:11px;color:var(--text-muted);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;outline:none;max-width:160px">
+          ${clientProjects.map(p => `<option>${esc(p)}</option>`).join('')}
+         </select>`
       : '<span style="color:var(--text-dim)">—</span>';
     return `<tr onclick="openClientModal(${c.rowIndex})">
       <td class="td-name">${esc(c.name)}</td>
