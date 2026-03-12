@@ -3,608 +3,764 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Database — daevud</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Studio Tools — daevud</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0e0e0f;
-    --surface: #161618;
-    --surface2: #1e1e21;
-    --border: #2a2a2e;
-    --accent: #c8f060;
-    --accent-dim: rgba(200,240,96,0.12);
-    --text: #e8e8ea;
-    --text-muted: #666670;
-    --text-dim: #3a3a40;
-    --red: #ff5f5f;
-    --yellow: #f0c060;
-    --green: #60f0a0;
-    --radius: 6px;
-  }
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0efe9;
+  --border: #e2e0d8;
+  --border2: #d0cec4;
+  --text: #1a1916;
+  --text-muted: #8a8880;
+  --text-dim: #b8b6b0;
+  --accent: #1a1916;
+  --accent2: #c17a3a;
+  --green: #2d6a4f;
+  --green-bg: #e8f5ef;
+  --red: #c0392b;
+  --red-bg: #fdf0ee;
+  --yellow: #b8860b;
+  --yellow-bg: #fdf8e8;
+  --blue: #2c5f8a;
+  --blue-bg: #eaf2f8;
+  --radius: 4px;
+  --radius2: 8px;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    min-height: 100vh;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+}
 
-  /* TOP BAR */
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+/* ── TOP BAR ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
 
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
+.topbar-left { display: flex; align-items: center; gap: 24px; }
 
-  .logo {
-    font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--accent);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
+.wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
 
-  .divider-v {
-    width: 1px;
-    height: 20px;
-    background: var(--border);
-  }
+.nav-tabs { display: flex; gap: 2px; }
 
-  .page-title {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 300;
-    letter-spacing: 0.04em;
-  }
+.nav-tab {
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.02em;
+}
+.nav-tab:hover { color: var(--text); background: var(--surface2); }
+.nav-tab.active { color: var(--text); background: var(--surface2); font-weight: 500; }
 
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
 
-  /* BUTTONS */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 16px;
-    border-radius: var(--radius);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 400;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'DM Mono', monospace;
+}
 
-  .btn-primary {
-    background: var(--accent);
-    color: #0e0e0f;
-    font-weight: 500;
-  }
-  .btn-primary:hover { background: #d4f570; }
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.btn-primary { background: var(--text); color: #fff; }
+.btn-primary:hover { background: #2d2c28; }
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid transparent; }
+.btn-danger:hover { background: var(--red-bg); border-color: rgba(192,57,43,0.2); }
+.btn-accent { background: var(--accent2); color: #fff; }
+.btn-accent:hover { background: #a86830; }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { color: var(--text); border-color: #444450; background: var(--surface2); }
+/* ── AUTH ── */
+#auth-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 52px);
+  padding: 40px;
+}
 
-  .btn-danger {
-    background: transparent;
-    color: var(--red);
-    border: 1px solid transparent;
-  }
-  .btn-danger:hover { background: rgba(255,95,95,0.1); border-color: rgba(255,95,95,0.3); }
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 56px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
 
-  /* AUTH STATE */
-  #auth-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 57px);
-    gap: 20px;
-    padding: 40px;
-  }
+.auth-card h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
 
-  .auth-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 48px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-  }
+.auth-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
 
-  .auth-card h2 {
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
+/* ── MAIN APP ── */
+#app-section { display: none; }
 
-  .auth-card p {
-    color: var(--text-muted);
-    font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 28px;
-  }
+.section { display: none; padding: 28px; }
+.section.active { display: block; }
 
-  .auth-icon {
-    width: 48px;
-    height: 48px;
-    background: var(--accent-dim);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 24px;
-    font-size: 22px;
-  }
+/* ── TOOLBAR ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
 
-  /* MAIN LAYOUT */
-  #app-section { display: none; }
+.toolbar-left { display: flex; align-items: center; gap: 10px; flex: 1; }
 
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--border);
-    gap: 12px;
-    flex-wrap: wrap;
-  }
+.search-wrap { position: relative; flex: 1; max-width: 280px; }
+.search-wrap input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 10px 7px 30px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-wrap input:focus { border-color: var(--border2); }
+.search-wrap input::placeholder { color: var(--text-dim); }
+.search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 13px; pointer-events: none; }
 
-  .toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-  }
+.filter-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  color: var(--text-muted);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
 
-  .search-wrap {
-    position: relative;
-    flex: 1;
-    max-width: 320px;
-  }
+.count-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--surface2);
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
 
-  .search-wrap input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px 12px 8px 34px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .search-wrap input:focus { border-color: #444450; }
-  .search-wrap input::placeholder { color: var(--text-muted); }
+/* ── TABLES ── */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
 
-  .search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    font-size: 14px;
-    pointer-events: none;
-  }
+table { width: 100%; border-collapse: collapse; }
 
-  .filter-select {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 8px 12px;
-    color: var(--text-muted);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    cursor: pointer;
-  }
-  .filter-select:focus { border-color: #444450; }
+thead th {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+thead th:hover { color: var(--text); }
 
-  .count-badge {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    padding: 4px 10px;
-    background: var(--surface2);
-    border-radius: 20px;
-    border: 1px solid var(--border);
-  }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr:last-child { border-bottom: none; }
 
-  /* TABLE */
-  .table-wrap {
-    overflow-x: auto;
-    padding: 0 28px 28px;
-  }
+td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 8px;
-  }
+.td-name { font-weight: 500; color: var(--text); }
+.td-muted { color: var(--text-muted); }
+.td-mono { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); }
+.td-amount { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text); }
 
-  thead th {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    padding: 12px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-  }
-  thead th:hover { color: var(--text); }
+/* ── PILLS ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.pill-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.pill-active { background: var(--green-bg); color: var(--green); }
+.pill-completed { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+.pill-prospect { background: var(--yellow-bg); color: var(--yellow); }
+.pill-paid { background: var(--green-bg); color: var(--green); }
+.pill-unpaid { background: var(--red-bg); color: var(--red); }
+.pill-draft { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+.pill-overdue { background: var(--red-bg); color: var(--red); }
+.pill-sent { background: var(--blue-bg); color: var(--blue); }
 
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-    cursor: pointer;
-  }
-  tbody tr:hover { background: var(--surface2); }
-  tbody tr:last-child { border-bottom: none; }
+/* ── FOLLOW UP INDICATOR ── */
+.followup-due { color: var(--red); font-weight: 500; }
+.followup-soon { color: var(--yellow); }
+.followup-ok { color: var(--text-muted); }
 
-  td {
-    padding: 13px 14px;
-    font-size: 13px;
-    vertical-align: middle;
-  }
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 60px 40px; color: var(--text-muted); }
+.empty-icon { font-size: 28px; margin-bottom: 12px; opacity: 0.3; }
+.empty-state p { font-size: 13px; }
 
-  .td-name { font-weight: 500; color: var(--text); }
-  .td-company { color: var(--text-muted); font-size: 12px; }
-  .td-email { color: var(--text-muted); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .td-phone { color: var(--text-muted); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .td-rate { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent); }
-  .td-notes { color: var(--text-muted); font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,25,22,0.4);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+.modal-overlay.open { display: flex; }
 
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-  }
-  .status-active { background: rgba(96,240,160,0.1); color: var(--green); border: 1px solid rgba(96,240,160,0.2); }
-  .status-completed { background: rgba(102,102,112,0.15); color: var(--text-muted); border: 1px solid var(--border); }
-  .status-prospect { background: rgba(240,192,96,0.1); color: var(--yellow); border: 1px solid rgba(240,192,96,0.2); }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalIn 0.18s ease;
+}
 
-  .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center;
-    padding: 80px 40px;
-    color: var(--text-muted);
-  }
-  .empty-state .empty-icon { font-size: 32px; margin-bottom: 16px; opacity: 0.4; }
-  .empty-state p { font-size: 13px; }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { font-size: 14px; font-weight: 500; }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 2px; border-radius: 3px; }
+.modal-close:hover { color: var(--text); }
 
-  /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(4px);
-  }
-  .modal-overlay.open { display: flex; }
+.modal-body { padding: 22px; }
+.modal-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px 18px; border-top: 1px solid var(--border); }
+.modal-footer-right { display: flex; gap: 8px; }
 
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 520px;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: modalIn 0.2s ease;
-  }
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-group.third { grid-column: span 1; }
 
-  @keyframes modalIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
+.form-group label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px 16px;
-    border-bottom: 1px solid var(--border);
-  }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--border2); background: var(--surface); }
+.form-group textarea { resize: vertical; min-height: 70px; }
 
-  .modal-header h3 {
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text);
-  }
+/* ── SECTION HEADER ── */
+.section-header { margin-bottom: 20px; }
+.section-header h2 { font-family: 'Instrument Serif', serif; font-size: 22px; font-weight: 400; color: var(--text); }
+.section-header p { color: var(--text-muted); font-size: 12px; margin-top: 3px; }
 
-  .modal-close {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px;
-    line-height: 1;
-    border-radius: 4px;
-    transition: color 0.15s;
-  }
-  .modal-close:hover { color: var(--text); }
+/* ── STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
 
-  .modal-body { padding: 24px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 16px 18px;
+}
+.stat-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.stat-value { font-family: 'Instrument Serif', serif; font-size: 24px; color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-  .form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
+/* ── TIME TRACKING ── */
+.timer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .form-group.full { grid-column: 1 / -1; }
+.timer-display {
+  font-family: 'DM Mono', monospace;
+  font-size: 32px;
+  font-weight: 300;
+  color: var(--text);
+  min-width: 130px;
+}
+.timer-display.running { color: var(--accent2); }
 
-  .form-group label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
+.timer-controls { display: flex; gap: 8px; align-items: center; }
+.timer-meta { display: flex; gap: 10px; flex: 1; flex-wrap: wrap; }
+.timer-meta select, .timer-meta input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  outline: none;
+  flex: 1;
+  min-width: 120px;
+}
 
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 9px 12px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    outline: none;
-    transition: border-color 0.15s;
-    width: 100%;
-  }
-  .form-group input:focus,
-  .form-group select:focus,
-  .form-group textarea:focus { border-color: var(--accent); }
-  .form-group textarea { resize: vertical; min-height: 80px; }
-  .form-group select option { background: var(--surface2); }
+/* ── INVOICE PREVIEW ── */
+.invoice-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius2);
+  padding: 32px;
+  max-width: 640px;
+}
+.invoice-preview-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; }
+.invoice-from { font-size: 13px; line-height: 1.7; color: var(--text-muted); }
+.invoice-from strong { color: var(--text); font-size: 15px; font-family: 'Instrument Serif', serif; display: block; margin-bottom: 4px; }
+.invoice-number { text-align: right; }
+.invoice-number .num { font-family: 'Instrument Serif', serif; font-size: 22px; color: var(--text); }
+.invoice-number .date { font-size: 11px; color: var(--text-muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+.invoice-to { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.invoice-to-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; }
+.invoice-to-name { font-size: 14px; font-weight: 500; }
+.invoice-lines table { width: 100%; border-collapse: collapse; }
+.invoice-lines th { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding: 6px 0; border-bottom: 1px solid var(--border); text-align: left; }
+.invoice-lines th:last-child { text-align: right; }
+.invoice-lines td { padding: 8px 0; font-size: 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+.invoice-lines td:last-child { text-align: right; font-family: 'DM Mono', monospace; }
+.invoice-total { display: flex; justify-content: flex-end; margin-top: 16px; }
+.invoice-total-box { text-align: right; }
+.invoice-total-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+.invoice-total-amount { font-family: 'Instrument Serif', serif; font-size: 28px; color: var(--text); margin-top: 4px; }
 
-  .modal-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px 20px;
-    border-top: 1px solid var(--border);
-    gap: 10px;
-  }
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--text);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 12px;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
 
-  .modal-footer-right {
-    display: flex;
-    gap: 10px;
-  }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--text-muted); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 18px;
-    font-size: 13px;
-    color: var(--text);
-    z-index: 999;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.success { border-color: rgba(96,240,160,0.3); color: var(--green); }
-  .toast.error { border-color: rgba(255,95,95,0.3); color: var(--red); }
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
 
-  /* LOADING */
-  .loading-row td {
-    text-align: center;
-    padding: 60px;
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .sync-indicator {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--text-muted);
-    font-family: 'DM Mono', monospace;
-  }
-  .sync-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
+.inline-edit-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 8px;
+}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-left">
-    <span class="logo">daevud</span>
-    <div class="divider-v"></div>
-    <span class="page-title">client database</span>
+    <span class="wordmark">daevud</span>
+    <nav class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab active" onclick="switchTab('clients')">Clients</button>
+      <button class="nav-tab" onclick="switchTab('invoices')">Invoices</button>
+      <button class="nav-tab" onclick="switchTab('time')">Time</button>
+    </nav>
   </div>
   <div class="topbar-right">
-    <div class="sync-indicator" id="sync-indicator" style="display:none">
-      <div class="sync-dot"></div>
-      <span>synced</span>
-    </div>
-    <button class="btn btn-ghost" id="sign-out-btn" style="display:none" onclick="signOut()">Sign out</button>
+    <div class="user-chip" id="user-chip" style="display:none">signed in</div>
+    <button class="btn btn-ghost" id="sign-out-btn" style="display:none;font-size:11px;padding:5px 10px" onclick="signOut()">Sign out</button>
   </div>
 </div>
 
 <!-- AUTH -->
 <div id="auth-section">
   <div class="auth-card">
-    <div class="auth-icon">🔐</div>
-    <h2>Sign in to continue</h2>
-    <p>Connect your Google account to access and manage your client database synced with Google Sheets.</p>
-    <button class="btn btn-primary" onclick="signIn()" style="width:100%; justify-content:center; padding: 12px;">
-      Sign in with Google
-    </button>
+    <h2>Studio Tools</h2>
+    <p>Sign in with Google to access your client database, invoices, and time tracking.</p>
+    <button class="btn btn-primary" onclick="signIn()" style="width:100%;justify-content:center;padding:10px;">Continue with Google</button>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app-section">
-  <div class="toolbar">
-    <div class="toolbar-left">
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="search-input" placeholder="Search clients…" oninput="filterClients()">
+
+  <!-- ══ CLIENTS ══ -->
+  <div class="section active" id="section-clients">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="client-search" placeholder="Search clients…" oninput="filterClients()">
+        </div>
+        <select class="filter-select" id="client-status-filter" onchange="filterClients()">
+          <option value="">All statuses</option>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
+          <option value="Prospect">Prospect</option>
+        </select>
+        <span class="count-badge" id="client-count">0 clients</span>
       </div>
-      <select class="filter-select" id="status-filter" onchange="filterClients()">
-        <option value="">All statuses</option>
-        <option value="Active">Active</option>
-        <option value="Completed">Completed</option>
-        <option value="Prospect">Prospect</option>
-      </select>
-      <span class="count-badge" id="count-badge">0 clients</span>
+      <button class="btn btn-primary" onclick="openClientModal()">+ Add client</button>
     </div>
-    <button class="btn btn-primary" onclick="openModal()">+ Add client</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortClients('name')">Name ↕</th>
+            <th onclick="sortClients('company')">Company ↕</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Rate</th>
+            <th onclick="sortClients('status')">Status ↕</th>
+            <th onclick="sortClients('followUpDate')">Follow Up ↕</th>
+            <th>Last Contact</th>
+            <th>Source</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="clients-tbody">
+          <tr><td colspan="10" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th onclick="sortBy('name')">Name ↕</th>
-          <th onclick="sortBy('company')">Company ↕</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th onclick="sortBy('rate')">Rate / Budget ↕</th>
-          <th onclick="sortBy('status')">Status ↕</th>
-          <th>Notes</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="clients-tbody">
-        <tr class="loading-row"><td colspan="8"><span class="spinner"></span>Loading…</td></tr>
-      </tbody>
-    </table>
+  <!-- ══ INVOICES ══ -->
+  <div class="section" id="section-invoices">
+    <div class="stats-row" id="invoice-stats"></div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="invoice-search" placeholder="Search invoices…" oninput="filterInvoices()">
+        </div>
+        <select class="filter-select" id="invoice-status-filter" onchange="filterInvoices()">
+          <option value="">All statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Sent">Sent</option>
+          <option value="Paid">Paid</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+        <span class="count-badge" id="invoice-count">0 invoices</span>
+      </div>
+      <button class="btn btn-primary" onclick="openInvoiceModal()">+ New invoice</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortInvoices('number')">Invoice # ↕</th>
+            <th onclick="sortInvoices('client')">Client ↕</th>
+            <th>Project</th>
+            <th onclick="sortInvoices('date')">Date ↕</th>
+            <th onclick="sortInvoices('dueDate')">Due ↕</th>
+            <th onclick="sortInvoices('amount')">Amount ↕</th>
+            <th onclick="sortInvoices('status')">Status ↕</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="invoices-tbody">
+          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- ══ TIME ══ -->
+  <div class="section" id="section-time">
+    <div class="stats-row" id="time-stats"></div>
+    <div class="timer-card">
+      <div class="timer-display" id="timer-display">00:00:00</div>
+      <div class="timer-controls">
+        <button class="btn btn-primary" id="timer-btn" onclick="toggleTimer()">Start</button>
+        <button class="btn btn-ghost" onclick="resetTimer()">Reset</button>
+      </div>
+      <div class="timer-meta">
+        <select id="timer-client" style="max-width:180px">
+          <option value="">Select client…</option>
+        </select>
+        <input type="text" id="timer-project" placeholder="Project / description…">
+        <select id="timer-type">
+          <option value="Hourly">Hourly</option>
+          <option value="Daily">Daily</option>
+          <option value="Flat">Flat fee</option>
+        </select>
+        <input type="number" id="timer-rate" placeholder="Rate ($)" style="max-width:100px">
+      </div>
+      <button class="btn btn-accent" onclick="logTimerEntry()">Log entry</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="time-search" placeholder="Search entries…" oninput="filterTime()">
+        </div>
+        <select class="filter-select" id="time-client-filter" onchange="filterTime()">
+          <option value="">All clients</option>
+        </select>
+        <span class="count-badge" id="time-count">0 entries</span>
+      </div>
+      <button class="btn btn-ghost" onclick="openTimeModal()">+ Manual entry</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTime('date')">Date ↕</th>
+            <th onclick="sortTime('client')">Client ↕</th>
+            <th>Project</th>
+            <th>Type</th>
+            <th onclick="sortTime('duration')">Duration ↕</th>
+            <th onclick="sortTime('rate')">Rate ↕</th>
+            <th onclick="sortTime('amount')">Amount ↕</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="time-tbody">
+          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+<!-- CLIENT MODAL -->
+<div class="modal-overlay" id="client-modal" onclick="handleOverlay(event,'client-modal')">
   <div class="modal">
     <div class="modal-header">
-      <h3 id="modal-title">Add client</h3>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3 id="client-modal-title">Add client</h3>
+      <button class="modal-close" onclick="closeModal('client-modal')">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group">
-          <label>Name *</label>
-          <input type="text" id="f-name" placeholder="Jane Smith">
-        </div>
-        <div class="form-group">
-          <label>Company</label>
-          <input type="text" id="f-company" placeholder="Acme Productions">
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="f-email" placeholder="jane@acme.com">
-        </div>
-        <div class="form-group">
-          <label>Phone</label>
-          <input type="tel" id="f-phone" placeholder="+1 (555) 000-0000">
-        </div>
-        <div class="form-group">
-          <label>Rate / Budget</label>
-          <input type="text" id="f-rate" placeholder="$800/day or $5,000 flat">
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="f-status">
+        <div class="form-group"><label>Name *</label><input type="text" id="c-name" placeholder="Jane Smith"></div>
+        <div class="form-group"><label>Company</label><input type="text" id="c-company" placeholder="Acme Productions"></div>
+        <div class="form-group"><label>Email</label><input type="email" id="c-email" placeholder="jane@acme.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="c-phone" placeholder="+1 (555) 000-0000"></div>
+        <div class="form-group"><label>Rate / Budget</label><input type="text" id="c-rate" placeholder="$800/day or $5,000 flat"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="c-status">
             <option value="Prospect">Prospect</option>
             <option value="Active">Active</option>
             <option value="Completed">Completed</option>
           </select>
         </div>
-        <div class="form-group full">
-          <label>Notes</label>
-          <textarea id="f-notes" placeholder="Preferences, project history, how you met…"></textarea>
+        <div class="form-group"><label>Last Contacted</label><input type="date" id="c-last-contacted"></div>
+        <div class="form-group"><label>Follow Up Date</label><input type="date" id="c-followup-date"></div>
+        <div class="form-group"><label>Lead Source</label><input type="text" id="c-source" placeholder="Referral, LinkedIn, Reddit…"></div>
+        <div class="form-group full"><label>Follow Up Notes</label><textarea id="c-followup-notes" placeholder="What to discuss, next steps…"></textarea></div>
+        <div class="form-group full"><label>Notes</label><textarea id="c-notes" placeholder="General notes, preferences…"></textarea></div>
+      </div>
+      <div class="inline-edit-note" id="gcal-note" style="display:none">📅 A Google Calendar reminder will be created for the follow up date.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="client-delete-btn" style="display:none" onclick="deleteClient()">Delete</button>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('client-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveClient()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-overlay" id="invoice-modal" onclick="handleOverlay(event,'invoice-modal')">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3 id="invoice-modal-title">New invoice</h3>
+      <button class="modal-close" onclick="closeModal('invoice-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Client *</label>
+          <select id="i-client"><option value="">Select client…</option></select>
         </div>
+        <div class="form-group"><label>Project</label><input type="text" id="i-project" placeholder="Project name"></div>
+        <div class="form-group"><label>Invoice #</label><input type="text" id="i-number" placeholder="INV-001"></div>
+        <div class="form-group"><label>Status</label>
+          <select id="i-status">
+            <option value="Draft">Draft</option>
+            <option value="Sent">Sent</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Issue Date</label><input type="date" id="i-date"></div>
+        <div class="form-group"><label>Due Date</label><input type="date" id="i-due-date"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Line Items</span>
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="addLineItem()">+ Add line</button>
+      </div>
+      <div id="line-items"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;align-items:center">
+        <span style="font-size:11px;color:var(--text-muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.08em">Total</span>
+        <span id="invoice-total-display" style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--text)">$0.00</span>
+      </div>
+      <div class="divider"></div>
+      <div class="form-group"><label>Notes</label><textarea id="i-notes" placeholder="Payment terms, thank you note…"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="invoice-delete-btn" style="display:none" onclick="deleteInvoice()">Delete</button>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('invoice-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveInvoice()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TIME MODAL -->
+<div class="modal-overlay" id="time-modal" onclick="handleOverlay(event,'time-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="time-modal-title">Log time entry</h3>
+      <button class="modal-close" onclick="closeModal('time-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Date</label><input type="date" id="t-date"></div>
+        <div class="form-group"><label>Client</label>
+          <select id="t-client"><option value="">Select client…</option></select>
+        </div>
+        <div class="form-group"><label>Project</label><input type="text" id="t-project" placeholder="Project / description"></div>
+        <div class="form-group"><label>Type</label>
+          <select id="t-type">
+            <option value="Hourly">Hourly</option>
+            <option value="Daily">Daily</option>
+            <option value="Flat">Flat fee</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Duration (hrs)</label><input type="number" id="t-duration" step="0.25" placeholder="8.0"></div>
+        <div class="form-group"><label>Rate ($)</label><input type="number" id="t-rate" placeholder="150"></div>
+        <div class="form-group full"><label>Notes</label><textarea id="t-notes" placeholder="What you worked on…"></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger" id="delete-btn" style="display:none" onclick="deleteClient()">Delete client</button>
+      <button class="btn btn-danger" id="time-delete-btn" style="display:none" onclick="deleteTimeEntry()">Delete</button>
       <div class="modal-footer-right">
-        <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveClient()">Save</button>
+        <button class="btn btn-ghost" onclick="closeModal('time-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveTimeEntry()">Save</button>
       </div>
     </div>
   </div>
@@ -613,277 +769,705 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ── CONFIG ──────────────────────────────────────────────
-  const CLIENT_ID   = '942988921389-un6hlms925c4ej0cuss2et1no6r6grkf.apps.googleusercontent.com';
-  const SHEET_ID    = '1HxBj_k2lHQFQYgd0wiLnpHHsUquRrNaMRqJaAT6gH7o';
-  const SHEET_NAME  = "clients";
-  const SHEET_NAME_QUOTED = "clients";
-  const SCOPES      = 'https://www.googleapis.com/auth/spreadsheets';
-  const HEADERS     = ['Name','Company','Email','Phone','Rate/Budget','Status','Notes'];
+// ── CONFIG ──────────────────────────────────────────────────────────────
+const CLIENT_ID = '942988921389-un6hlms925c4ej0cuss2et1no6r6grkf.apps.googleusercontent.com';
+const SHEET_ID  = '1HxBj_k2lHQFQYgd0wiLnpHHsUquRrNaMRqJaAT6gH7o';
+const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events';
 
-  // ── STATE ───────────────────────────────────────────────
-  let tokenClient, accessToken;
-  let allClients = [];
-  let editingRowIndex = null;
-  let sortField = null, sortAsc = true;
+const SHEETS = {
+  clients:  { name: 'clients',  headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
+  invoices: { name: 'invoices', headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
+  time:     { name: 'time',     headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] }
+};
 
-  // ── GOOGLE IDENTITY ─────────────────────────────────────
-  function initGSI() {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (resp) => {
-        if (resp.error) { showToast('Auth error: ' + resp.error, 'error'); return; }
-        accessToken = resp.access_token;
-        onSignedIn();
-      }
-    });
-  }
+// ── STATE ────────────────────────────────────────────────────────────────
+let accessToken;
+let allClients = [], allInvoices = [], allTime = [];
+let editingClient = null, editingInvoice = null, editingTime = null;
+let clientSort = null, clientSortAsc = true;
+let invoiceSort = null, invoiceSortAsc = true;
+let timeSort = null, timeSortAsc = true;
+let timerInterval = null, timerRunning = false, timerSeconds = 0, timerStart = null;
+let lineItemCount = 0;
+let currentTab = 'clients';
 
-  function signIn() { tokenClient.requestAccessToken(); }
+// ── AUTH ─────────────────────────────────────────────────────────────────
+let tokenClient;
 
-  function signOut() {
-    google.accounts.oauth2.revoke(accessToken, () => {});
-    accessToken = null;
-    allClients = [];
-    document.getElementById('auth-section').style.display = 'flex';
-    document.getElementById('app-section').style.display = 'none';
-    document.getElementById('sign-out-btn').style.display = 'none';
-    document.getElementById('sync-indicator').style.display = 'none';
-  }
-
-  async function onSignedIn() {
-    document.getElementById('auth-section').style.display = 'none';
-    document.getElementById('app-section').style.display = 'block';
-    document.getElementById('sign-out-btn').style.display = '';
-    document.getElementById('sync-indicator').style.display = 'flex';
-    await ensureHeaders();
-    await loadClients();
-  }
-
-  // ── SHEETS API HELPERS ──────────────────────────────────
-  async function sheetsGet(range) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range.includes(SHEET_NAME) ? range : range)}`;
-    const r = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken }});
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-
-  async function sheetsUpdate(range, values) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`;
-    const r = await fetch(url, {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ range, majorDimension: 'ROWS', values })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-
-  async function sheetsAppend(values) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME_QUOTED)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ majorDimension: 'ROWS', values })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-
-  async function sheetsClear(range) {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}:clear`;
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
-    });
-    if (!r.ok) throw new Error(await r.text());
-    return r.json();
-  }
-
-  async function ensureHeaders() {
-    try {
-      const data = await sheetsGet(`${SHEET_NAME_QUOTED}!A1:G1`);
-      if (!data.values || data.values[0]?.join(',') !== HEADERS.join(',')) {
-        await sheetsUpdate(`${SHEET_NAME_QUOTED}!A1:G1`, [HEADERS]);
-      }
-    } catch(e) { console.warn('ensureHeaders:', e); }
-  }
-
-  // ── LOAD ────────────────────────────────────────────────
-  async function loadClients() {
-    try {
-      const data = await sheetsGet(`${SHEET_NAME_QUOTED}!A2:G1000`);
-      allClients = (data.values || []).map((row, i) => ({
-        rowIndex: i + 2, // 1-indexed, row 1 = headers
-        name: row[0] || '',
-        company: row[1] || '',
-        email: row[2] || '',
-        phone: row[3] || '',
-        rate: row[4] || '',
-        status: row[5] || 'Prospect',
-        notes: row[6] || ''
-      })).filter(c => c.name);
-      renderTable(allClients);
-    } catch(e) {
-      showToast('Failed to load: ' + e.message, 'error');
-      renderTable([]);
+function initGSI() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Auth error: ' + resp.error, 'error'); return; }
+      accessToken = resp.access_token;
+      await onSignedIn();
     }
-  }
-
-  // ── RENDER ───────────────────────────────────────────────
-  function renderTable(clients) {
-    const tbody = document.getElementById('clients-tbody');
-    const badge = document.getElementById('count-badge');
-    badge.textContent = clients.length + (clients.length === 1 ? ' client' : ' clients');
-
-    if (clients.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet. Add your first one.</p></div></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = clients.map(c => `
-      <tr onclick="openModal(${c.rowIndex})">
-        <td class="td-name">${esc(c.name)}</td>
-        <td class="td-company">${esc(c.company)}</td>
-        <td class="td-email">${esc(c.email)}</td>
-        <td class="td-phone">${esc(c.phone)}</td>
-        <td class="td-rate">${esc(c.rate)}</td>
-        <td><span class="status-pill status-${c.status.toLowerCase()}"><span class="dot"></span>${esc(c.status)}</span></td>
-        <td class="td-notes">${esc(c.notes)}</td>
-        <td><button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="event.stopPropagation();openModal(${c.rowIndex})">Edit</button></td>
-      </tr>
-    `).join('');
-  }
-
-  function esc(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  // ── FILTER / SORT ────────────────────────────────────────
-  function filterClients() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    const sf = document.getElementById('status-filter').value;
-    let list = allClients.filter(c => {
-      const matchQ = !q || [c.name,c.company,c.email,c.notes].some(v => v.toLowerCase().includes(q));
-      const matchS = !sf || c.status === sf;
-      return matchQ && matchS;
-    });
-    if (sortField) {
-      list = list.sort((a,b) => {
-        const va = (a[sortField]||'').toLowerCase();
-        const vb = (b[sortField]||'').toLowerCase();
-        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-      });
-    }
-    renderTable(list);
-  }
-
-  function sortBy(field) {
-    if (sortField === field) sortAsc = !sortAsc;
-    else { sortField = field; sortAsc = true; }
-    filterClients();
-  }
-
-  // ── MODAL ────────────────────────────────────────────────
-  function openModal(rowIndex) {
-    editingRowIndex = rowIndex || null;
-    const isEdit = !!rowIndex;
-    document.getElementById('modal-title').textContent = isEdit ? 'Edit client' : 'Add client';
-    document.getElementById('delete-btn').style.display = isEdit ? '' : 'none';
-
-    if (isEdit) {
-      const c = allClients.find(x => x.rowIndex === rowIndex);
-      if (c) {
-        document.getElementById('f-name').value = c.name;
-        document.getElementById('f-company').value = c.company;
-        document.getElementById('f-email').value = c.email;
-        document.getElementById('f-phone').value = c.phone;
-        document.getElementById('f-rate').value = c.rate;
-        document.getElementById('f-status').value = c.status;
-        document.getElementById('f-notes').value = c.notes;
-      }
-    } else {
-      ['f-name','f-company','f-email','f-phone','f-rate','f-notes'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('f-status').value = 'Prospect';
-    }
-
-    document.getElementById('modal-overlay').classList.add('open');
-  }
-
-  function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('open');
-    editingRowIndex = null;
-  }
-
-  function handleOverlayClick(e) {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-  }
-
-  // ── SAVE ─────────────────────────────────────────────────
-  async function saveClient() {
-    const name = document.getElementById('f-name').value.trim();
-    if (!name) { showToast('Name is required', 'error'); return; }
-
-    const row = [
-      name,
-      document.getElementById('f-company').value.trim(),
-      document.getElementById('f-email').value.trim(),
-      document.getElementById('f-phone').value.trim(),
-      document.getElementById('f-rate').value.trim(),
-      document.getElementById('f-status').value,
-      document.getElementById('f-notes').value.trim()
-    ];
-
-    try {
-      if (editingRowIndex) {
-        await sheetsUpdate(`${SHEET_NAME_QUOTED}!A${editingRowIndex}:G${editingRowIndex}`, [row]);
-        showToast('Client updated ✓', 'success');
-      } else {
-        await sheetsAppend([row]);
-        showToast('Client added ✓', 'success');
-      }
-      closeModal();
-      await loadClients();
-    } catch(e) {
-      showToast('Save failed: ' + e.message, 'error');
-    }
-  }
-
-  // ── DELETE ───────────────────────────────────────────────
-  async function deleteClient() {
-    if (!editingRowIndex) return;
-    if (!confirm('Delete this client? This cannot be undone.')) return;
-    try {
-      await sheetsClear(`${SHEET_NAME_QUOTED}!A${editingRowIndex}:G${editingRowIndex}`);
-      showToast('Client deleted', 'success');
-      closeModal();
-      await loadClients();
-    } catch(e) {
-      showToast('Delete failed: ' + e.message, 'error');
-    }
-  }
-
-  // ── TOAST ────────────────────────────────────────────────
-  function showToast(msg, type = '') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast show' + (type ? ' ' + type : '');
-    setTimeout(() => t.className = 'toast', 3000);
-  }
-
-  // ── KEYBOARD ─────────────────────────────────────────────
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
   });
+}
 
-  // ── LOAD GSI ─────────────────────────────────────────────
-  window.onload = () => {
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.onload = initGSI;
-    document.head.appendChild(s);
-  };
+function signIn() { tokenClient.requestAccessToken(); }
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null;
+  document.getElementById('auth-section').style.display = 'flex';
+  document.getElementById('app-section').style.display = 'none';
+  document.getElementById('sign-out-btn').style.display = 'none';
+  document.getElementById('user-chip').style.display = 'none';
+}
+
+async function onSignedIn() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('sign-out-btn').style.display = '';
+  document.getElementById('user-chip').style.display = '';
+  await ensureAllSheets();
+  await loadAll();
+}
+
+// ── SHEETS HELPERS ────────────────────────────────────────────────────────
+function q(name) { return name.includes(' ') ? `'${name}'` : name; }
+
+async function sheetsGet(sheet, range) {
+  const r = `${q(sheet)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken }});
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsUpdate(sheet, range, values) {
+  const r = `${q(sheet)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}?valueInputOption=RAW`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range: r, majorDimension: 'ROWS', values })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsAppend(sheet, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(q(sheet))}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ majorDimension: 'ROWS', values })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsClear(sheet, range) {
+  const r = `${q(sheet)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}:clear`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function ensureSheet(sheetInfo) {
+  try {
+    const data = await sheetsGet(sheetInfo.name, 'A1:Z1');
+    if (!data.values || data.values[0]?.join(',') !== sheetInfo.headers.join(',')) {
+      await sheetsUpdate(sheetInfo.name, `A1:${colLetter(sheetInfo.headers.length)}1`, [sheetInfo.headers]);
+    }
+  } catch(e) {
+    // Sheet may not exist — try creating it via batchUpdate
+    try {
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests: [{ addSheet: { properties: { title: sheetInfo.name }}}]})
+      });
+      await sheetsUpdate(sheetInfo.name, `A1:${colLetter(sheetInfo.headers.length)}1`, [sheetInfo.headers]);
+    } catch(e2) { console.warn('Sheet setup:', e2); }
+  }
+}
+
+async function ensureAllSheets() {
+  await Promise.all(Object.values(SHEETS).map(s => ensureSheet(s)));
+}
+
+function colLetter(n) { return String.fromCharCode(64 + n); }
+
+// ── LOAD ALL ──────────────────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadClients(), loadInvoices(), loadTime()]);
+  populateClientDropdowns();
+}
+
+// ── CLIENTS ───────────────────────────────────────────────────────────────
+async function loadClients() {
+  try {
+    const data = await sheetsGet('clients', 'A2:K1000');
+    allClients = (data.values || []).map((row, i) => ({
+      rowIndex: i + 2,
+      name: row[0]||'', company: row[1]||'', email: row[2]||'', phone: row[3]||'',
+      rate: row[4]||'', status: row[5]||'Prospect', notes: row[6]||'',
+      lastContacted: row[7]||'', followUpDate: row[8]||'', followUpNotes: row[9]||'',
+      source: row[10]||''
+    })).filter(c => c.name);
+    renderClients(allClients);
+  } catch(e) { showToast('Failed to load clients', 'error'); renderClients([]); }
+}
+
+function renderClients(list) {
+  const tbody = document.getElementById('clients-tbody');
+  document.getElementById('client-count').textContent = list.length + (list.length===1?' client':' clients');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet.</p></div></td></tr>`; return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  tbody.innerHTML = list.map(c => {
+    let fuClass = '', fuText = c.followUpDate || '—';
+    if (c.followUpDate) {
+      const d = new Date(c.followUpDate + 'T00:00:00');
+      const diff = Math.round((d - today) / 86400000);
+      if (diff < 0) { fuClass = 'followup-due'; fuText = `${Math.abs(diff)}d overdue`; }
+      else if (diff <= 7) { fuClass = 'followup-soon'; fuText = diff === 0 ? 'Today' : `In ${diff}d`; }
+      else { fuClass = 'followup-ok'; fuText = c.followUpDate; }
+    }
+    return `<tr onclick="openClientModal(${c.rowIndex})">
+      <td class="td-name">${esc(c.name)}</td>
+      <td class="td-muted">${esc(c.company)}</td>
+      <td class="td-mono">${esc(c.email)}</td>
+      <td class="td-mono">${esc(c.phone)}</td>
+      <td class="td-mono">${esc(c.rate)}</td>
+      <td><span class="pill pill-${c.status.toLowerCase()}">${esc(c.status)}</span></td>
+      <td class="${fuClass}">${fuText}</td>
+      <td class="td-muted">${c.lastContacted||'—'}</td>
+      <td class="td-muted">${esc(c.source)}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openClientModal(${c.rowIndex})">Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterClients() {
+  const q2 = document.getElementById('client-search').value.toLowerCase();
+  const sf = document.getElementById('client-status-filter').value;
+  let list = allClients.filter(c => {
+    const mq = !q2 || [c.name,c.company,c.email,c.notes,c.source].some(v=>v.toLowerCase().includes(q2));
+    const ms = !sf || c.status === sf;
+    return mq && ms;
+  });
+  if (clientSort) list = list.sort((a,b) => {
+    const va = (a[clientSort]||'').toLowerCase(), vb = (b[clientSort]||'').toLowerCase();
+    return clientSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  renderClients(list);
+}
+
+function sortClients(f) { if (clientSort===f) clientSortAsc=!clientSortAsc; else { clientSort=f; clientSortAsc=true; } filterClients(); }
+
+function openClientModal(rowIndex) {
+  editingClient = rowIndex || null;
+  const isEdit = !!rowIndex;
+  document.getElementById('client-modal-title').textContent = isEdit ? 'Edit client' : 'Add client';
+  document.getElementById('client-delete-btn').style.display = isEdit ? '' : 'none';
+  document.getElementById('gcal-note').style.display = 'none';
+
+  if (isEdit) {
+    const c = allClients.find(x => x.rowIndex === rowIndex);
+    if (c) {
+      document.getElementById('c-name').value = c.name;
+      document.getElementById('c-company').value = c.company;
+      document.getElementById('c-email').value = c.email;
+      document.getElementById('c-phone').value = c.phone;
+      document.getElementById('c-rate').value = c.rate;
+      document.getElementById('c-status').value = c.status;
+      document.getElementById('c-notes').value = c.notes;
+      document.getElementById('c-last-contacted').value = c.lastContacted;
+      document.getElementById('c-followup-date').value = c.followUpDate;
+      document.getElementById('c-followup-notes').value = c.followUpNotes;
+      document.getElementById('c-source').value = c.source;
+    }
+  } else {
+    ['c-name','c-company','c-email','c-phone','c-rate','c-notes','c-last-contacted','c-followup-date','c-followup-notes','c-source'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('c-status').value = 'Prospect';
+  }
+
+  document.getElementById('c-followup-date').addEventListener('change', function() {
+    document.getElementById('gcal-note').style.display = this.value ? '' : 'none';
+  }, { once: true });
+
+  openModal('client-modal');
+}
+
+async function saveClient() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+  const followUpDate = document.getElementById('c-followup-date').value;
+  const row = [
+    name,
+    document.getElementById('c-company').value.trim(),
+    document.getElementById('c-email').value.trim(),
+    document.getElementById('c-phone').value.trim(),
+    document.getElementById('c-rate').value.trim(),
+    document.getElementById('c-status').value,
+    document.getElementById('c-notes').value.trim(),
+    document.getElementById('c-last-contacted').value,
+    followUpDate,
+    document.getElementById('c-followup-notes').value.trim(),
+    document.getElementById('c-source').value.trim()
+  ];
+  try {
+    if (editingClient) {
+      await sheetsUpdate('clients', `A${editingClient}:K${editingClient}`, [row]);
+    } else {
+      await sheetsAppend('clients', [row]);
+    }
+    if (followUpDate) await createCalendarReminder(name, followUpDate, document.getElementById('c-followup-notes').value.trim());
+    showToast('Client saved ✓', 'success');
+    closeModal('client-modal');
+    await loadClients();
+    populateClientDropdowns();
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function deleteClient() {
+  if (!editingClient || !confirm('Delete this client?')) return;
+  try {
+    await sheetsClear('clients', `A${editingClient}:K${editingClient}`);
+    showToast('Client deleted');
+    closeModal('client-modal');
+    await loadClients();
+    populateClientDropdowns();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+// ── GOOGLE CALENDAR ────────────────────────────────────────────────────────
+async function createCalendarReminder(clientName, dateStr, notes) {
+  try {
+    const date = new Date(dateStr + 'T09:00:00');
+    const end  = new Date(dateStr + 'T09:30:00');
+    const event = {
+      summary: `Follow up: ${clientName}`,
+      description: notes || `Follow up with ${clientName}`,
+      start: { dateTime: date.toISOString(), timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      end:   { dateTime: end.toISOString(),  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone },
+      reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 60 }, { method: 'email', minutes: 1440 }] }
+    };
+    await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(event)
+    });
+  } catch(e) { console.warn('Calendar event failed:', e); }
+}
+
+// ── INVOICES ──────────────────────────────────────────────────────────────
+async function loadInvoices() {
+  try {
+    const data = await sheetsGet('invoices', 'A2:I1000');
+    allInvoices = (data.values || []).map((row, i) => ({
+      rowIndex: i + 2,
+      number: row[0]||'', client: row[1]||'', project: row[2]||'',
+      date: row[3]||'', dueDate: row[4]||'', amount: parseFloat(row[5])||0,
+      status: row[6]||'Draft', notes: row[7]||'', lineItems: row[8]||'[]'
+    })).filter(i => i.number || i.client);
+    renderInvoices(allInvoices);
+    renderInvoiceStats();
+  } catch(e) { showToast('Failed to load invoices', 'error'); renderInvoices([]); }
+}
+
+function renderInvoiceStats() {
+  const total = allInvoices.reduce((s,i) => s + i.amount, 0);
+  const paid = allInvoices.filter(i=>i.status==='Paid').reduce((s,i)=>s+i.amount,0);
+  const unpaid = allInvoices.filter(i=>i.status==='Sent'||i.status==='Overdue').reduce((s,i)=>s+i.amount,0);
+  const overdue = allInvoices.filter(i=>i.status==='Overdue').length;
+  document.getElementById('invoice-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Invoiced</div><div class="stat-value">${fmt(total)}</div></div>
+    <div class="stat-card"><div class="stat-label">Paid</div><div class="stat-value" style="color:var(--green)">${fmt(paid)}</div></div>
+    <div class="stat-card"><div class="stat-label">Outstanding</div><div class="stat-value" style="color:var(--accent2)">${fmt(unpaid)}</div></div>
+    <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value" style="color:var(--red)">${overdue}</div><div class="stat-sub">invoice${overdue===1?'':'s'}</div></div>
+  `;
+}
+
+function renderInvoices(list) {
+  const tbody = document.getElementById('invoices-tbody');
+  document.getElementById('invoice-count').textContent = list.length + (list.length===1?' invoice':' invoices');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">◎</div><p>No invoices yet.</p></div></td></tr>`; return; }
+  tbody.innerHTML = list.map(inv => `
+    <tr onclick="openInvoiceModal(${inv.rowIndex})">
+      <td class="td-name">${esc(inv.number)}</td>
+      <td class="td-muted">${esc(inv.client)}</td>
+      <td class="td-muted">${esc(inv.project)}</td>
+      <td class="td-mono">${inv.date||'—'}</td>
+      <td class="td-mono">${inv.dueDate||'—'}</td>
+      <td class="td-amount">${fmt(inv.amount)}</td>
+      <td><span class="pill pill-${inv.status.toLowerCase()}">${esc(inv.status)}</span></td>
+      <td class="td-muted" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(inv.notes)}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openInvoiceModal(${inv.rowIndex})">Edit</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterInvoices() {
+  const q2 = document.getElementById('invoice-search').value.toLowerCase();
+  const sf = document.getElementById('invoice-status-filter').value;
+  let list = allInvoices.filter(i => {
+    const mq = !q2 || [i.number,i.client,i.project,i.notes].some(v=>v.toLowerCase().includes(q2));
+    const ms = !sf || i.status === sf;
+    return mq && ms;
+  });
+  if (invoiceSort) list = list.sort((a,b) => {
+    const va = String(a[invoiceSort]||'').toLowerCase(), vb = String(b[invoiceSort]||'').toLowerCase();
+    return invoiceSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  renderInvoices(list);
+}
+
+function sortInvoices(f) { if (invoiceSort===f) invoiceSortAsc=!invoiceSortAsc; else { invoiceSort=f; invoiceSortAsc=true; } filterInvoices(); }
+
+function openInvoiceModal(rowIndex) {
+  editingInvoice = rowIndex || null;
+  const isEdit = !!rowIndex;
+  document.getElementById('invoice-modal-title').textContent = isEdit ? 'Edit invoice' : 'New invoice';
+  document.getElementById('invoice-delete-btn').style.display = isEdit ? '' : 'none';
+  lineItemCount = 0;
+  document.getElementById('line-items').innerHTML = '';
+
+  if (isEdit) {
+    const inv = allInvoices.find(x => x.rowIndex === rowIndex);
+    if (inv) {
+      document.getElementById('i-client').value = inv.client;
+      document.getElementById('i-project').value = inv.project;
+      document.getElementById('i-number').value = inv.number;
+      document.getElementById('i-status').value = inv.status;
+      document.getElementById('i-date').value = inv.date;
+      document.getElementById('i-due-date').value = inv.dueDate;
+      document.getElementById('i-notes').value = inv.notes;
+      try { JSON.parse(inv.lineItems).forEach(li => addLineItem(li)); } catch(e) { addLineItem(); }
+    }
+  } else {
+    ['i-project','i-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('i-client').value = '';
+    document.getElementById('i-status').value = 'Draft';
+    document.getElementById('i-date').value = today();
+    document.getElementById('i-due-date').value = '';
+    document.getElementById('i-number').value = nextInvoiceNumber();
+    addLineItem();
+  }
+  updateInvoiceTotal();
+  openModal('invoice-modal');
+}
+
+function nextInvoiceNumber() {
+  const nums = allInvoices.map(i => parseInt(i.number.replace(/\D/g,''))||0);
+  const next = nums.length ? Math.max(...nums) + 1 : 1;
+  return 'INV-' + String(next).padStart(3,'0');
+}
+
+function addLineItem(data) {
+  lineItemCount++;
+  const id = lineItemCount;
+  const div = document.createElement('div');
+  div.id = `li-${id}`;
+  div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 80px 80px 28px;gap:6px;margin-bottom:6px;align-items:center';
+  div.innerHTML = `
+    <input type="text" placeholder="Description" value="${esc(data?.desc||'')}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:'DM Sans',sans-serif">
+    <input type="number" placeholder="Qty" value="${data?.qty||1}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:'DM Mono',monospace;text-align:right">
+    <input type="number" placeholder="Rate" value="${data?.rate||''}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:'DM Mono',monospace;text-align:right">
+    <span id="li-total-${id}" style="font-family:'DM Mono',monospace;font-size:12px;text-align:right;color:var(--text-muted)">$0</span>
+    <button onclick="document.getElementById('li-${id}').remove();updateInvoiceTotal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0">×</button>
+  `;
+  document.getElementById('line-items').appendChild(div);
+  updateInvoiceTotal();
+}
+
+function getLineItems() {
+  const items = [];
+  document.querySelectorAll('[id^="li-"]').forEach(el => {
+    if (!el.id.includes('total')) {
+      const inputs = el.querySelectorAll('input');
+      if (inputs.length >= 3) {
+        const desc = inputs[0].value;
+        const qty = parseFloat(inputs[1].value)||1;
+        const rate = parseFloat(inputs[2].value)||0;
+        items.push({ desc, qty, rate, total: qty * rate });
+      }
+    }
+  });
+  return items;
+}
+
+function updateInvoiceTotal() {
+  let total = 0;
+  document.querySelectorAll('[id^="li-"]').forEach(el => {
+    if (!el.id.includes('total')) {
+      const inputs = el.querySelectorAll('input');
+      if (inputs.length >= 3) {
+        const qty = parseFloat(inputs[1].value)||1;
+        const rate = parseFloat(inputs[2].value)||0;
+        const t = qty * rate;
+        total += t;
+        const id = el.id.replace('li-','');
+        const span = document.getElementById(`li-total-${id}`);
+        if (span) span.textContent = fmt(t);
+      }
+    }
+  });
+  document.getElementById('invoice-total-display').textContent = fmt(total);
+}
+
+async function saveInvoice() {
+  const client = document.getElementById('i-client').value;
+  if (!client) { showToast('Client is required', 'error'); return; }
+  const items = getLineItems();
+  const amount = items.reduce((s,i) => s + i.total, 0);
+  const row = [
+    document.getElementById('i-number').value.trim(),
+    client,
+    document.getElementById('i-project').value.trim(),
+    document.getElementById('i-date').value,
+    document.getElementById('i-due-date').value,
+    amount,
+    document.getElementById('i-status').value,
+    document.getElementById('i-notes').value.trim(),
+    JSON.stringify(items)
+  ];
+  try {
+    if (editingInvoice) await sheetsUpdate('invoices', `A${editingInvoice}:I${editingInvoice}`, [row]);
+    else await sheetsAppend('invoices', [row]);
+    showToast('Invoice saved ✓', 'success');
+    closeModal('invoice-modal');
+    await loadInvoices();
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function deleteInvoice() {
+  if (!editingInvoice || !confirm('Delete this invoice?')) return;
+  try {
+    await sheetsClear('invoices', `A${editingInvoice}:I${editingInvoice}`);
+    showToast('Invoice deleted');
+    closeModal('invoice-modal');
+    await loadInvoices();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+// ── TIME TRACKING ─────────────────────────────────────────────────────────
+async function loadTime() {
+  try {
+    const data = await sheetsGet('time', 'A2:H1000');
+    allTime = (data.values || []).map((row, i) => ({
+      rowIndex: i + 2,
+      date: row[0]||'', client: row[1]||'', project: row[2]||'',
+      type: row[3]||'Hourly', duration: parseFloat(row[4])||0,
+      rate: parseFloat(row[5])||0, amount: parseFloat(row[6])||0, notes: row[7]||''
+    })).filter(t => t.date || t.client);
+    renderTime(allTime);
+    renderTimeStats();
+  } catch(e) { showToast('Failed to load time', 'error'); renderTime([]); }
+}
+
+function renderTimeStats() {
+  const totalHrs = allTime.filter(t=>t.type==='Hourly').reduce((s,t)=>s+t.duration,0);
+  const totalDays = allTime.filter(t=>t.type==='Daily').reduce((s,t)=>s+t.duration,0);
+  const totalEarned = allTime.reduce((s,t)=>s+t.amount,0);
+  const thisMonth = allTime.filter(t => t.date && t.date.startsWith(new Date().toISOString().slice(0,7)));
+  const monthEarned = thisMonth.reduce((s,t)=>s+t.amount,0);
+  document.getElementById('time-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value">${fmt(totalEarned)}</div></div>
+    <div class="stat-card"><div class="stat-label">This Month</div><div class="stat-value">${fmt(monthEarned)}</div></div>
+    <div class="stat-card"><div class="stat-label">Hours Logged</div><div class="stat-value">${totalHrs.toFixed(1)}</div><div class="stat-sub">hours</div></div>
+    <div class="stat-card"><div class="stat-label">Days Logged</div><div class="stat-value">${totalDays.toFixed(1)}</div><div class="stat-sub">days</div></div>
+  `;
+}
+
+function renderTime(list) {
+  const tbody = document.getElementById('time-tbody');
+  document.getElementById('time-count').textContent = list.length + (list.length===1?' entry':' entries');
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">◎</div><p>No time entries yet.</p></div></td></tr>`; return; }
+  tbody.innerHTML = list.map(t => `
+    <tr onclick="openTimeModal(${t.rowIndex})">
+      <td class="td-mono">${t.date||'—'}</td>
+      <td class="td-muted">${esc(t.client)}</td>
+      <td class="td-muted">${esc(t.project)}</td>
+      <td><span class="pill pill-draft">${esc(t.type)}</span></td>
+      <td class="td-mono">${t.duration} ${t.type==='Daily'?'day'+(t.duration!==1?'s':''):'hr'+(t.duration!==1?'s':'')}</td>
+      <td class="td-mono">${fmt(t.rate)}</td>
+      <td class="td-amount">${fmt(t.amount)}</td>
+      <td class="td-muted" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.notes)}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openTimeModal(${t.rowIndex})">Edit</button></td>
+    </tr>
+  `).join('');
+}
+
+function filterTime() {
+  const q2 = document.getElementById('time-search').value.toLowerCase();
+  const cf = document.getElementById('time-client-filter').value;
+  let list = allTime.filter(t => {
+    const mq = !q2 || [t.client,t.project,t.notes].some(v=>v.toLowerCase().includes(q2));
+    const mc = !cf || t.client === cf;
+    return mq && mc;
+  });
+  if (timeSort) list = list.sort((a,b) => {
+    const va = String(a[timeSort]||'').toLowerCase(), vb = String(b[timeSort]||'').toLowerCase();
+    return timeSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  renderTime(list);
+}
+
+function sortTime(f) { if (timeSort===f) timeSortAsc=!timeSortAsc; else { timeSort=f; timeSortAsc=true; } filterTime(); }
+
+// ── TIMER ─────────────────────────────────────────────────────────────────
+function toggleTimer() {
+  if (!timerRunning) {
+    timerRunning = true;
+    timerStart = Date.now() - timerSeconds * 1000;
+    timerInterval = setInterval(() => {
+      timerSeconds = Math.floor((Date.now() - timerStart) / 1000);
+      document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+      document.getElementById('timer-display').classList.add('running');
+    }, 1000);
+    document.getElementById('timer-btn').textContent = 'Pause';
+  } else {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('timer-btn').textContent = 'Resume';
+    document.getElementById('timer-display').classList.remove('running');
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 0;
+  document.getElementById('timer-display').textContent = '00:00:00';
+  document.getElementById('timer-display').classList.remove('running');
+  document.getElementById('timer-btn').textContent = 'Start';
+}
+
+function formatTime(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');
+}
+
+function logTimerEntry() {
+  if (timerSeconds === 0) { showToast('Start the timer first', 'error'); return; }
+  const hrs = (timerSeconds / 3600).toFixed(2);
+  document.getElementById('t-date').value = today();
+  document.getElementById('t-client').value = document.getElementById('timer-client').value;
+  document.getElementById('t-project').value = document.getElementById('timer-project').value;
+  document.getElementById('t-type').value = document.getElementById('timer-type').value;
+  document.getElementById('t-duration').value = hrs;
+  document.getElementById('t-rate').value = document.getElementById('timer-rate').value;
+  document.getElementById('t-notes').value = '';
+  editingTime = null;
+  document.getElementById('time-modal-title').textContent = 'Log time entry';
+  document.getElementById('time-delete-btn').style.display = 'none';
+  openModal('time-modal');
+}
+
+function openTimeModal(rowIndex) {
+  editingTime = rowIndex || null;
+  const isEdit = !!rowIndex;
+  document.getElementById('time-modal-title').textContent = isEdit ? 'Edit entry' : 'Log time entry';
+  document.getElementById('time-delete-btn').style.display = isEdit ? '' : 'none';
+
+  if (isEdit) {
+    const t = allTime.find(x => x.rowIndex === rowIndex);
+    if (t) {
+      document.getElementById('t-date').value = t.date;
+      document.getElementById('t-client').value = t.client;
+      document.getElementById('t-project').value = t.project;
+      document.getElementById('t-type').value = t.type;
+      document.getElementById('t-duration').value = t.duration;
+      document.getElementById('t-rate').value = t.rate;
+      document.getElementById('t-notes').value = t.notes;
+    }
+  } else {
+    document.getElementById('t-date').value = today();
+    ['t-client','t-project','t-duration','t-rate','t-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('t-type').value = 'Hourly';
+  }
+  openModal('time-modal');
+}
+
+async function saveTimeEntry() {
+  const duration = parseFloat(document.getElementById('t-duration').value)||0;
+  const rate = parseFloat(document.getElementById('t-rate').value)||0;
+  const amount = duration * rate;
+  const row = [
+    document.getElementById('t-date').value,
+    document.getElementById('t-client').value,
+    document.getElementById('t-project').value.trim(),
+    document.getElementById('t-type').value,
+    duration, rate, amount,
+    document.getElementById('t-notes').value.trim()
+  ];
+  try {
+    if (editingTime) await sheetsUpdate('time', `A${editingTime}:H${editingTime}`, [row]);
+    else await sheetsAppend('time', [row]);
+    showToast('Entry saved ✓', 'success');
+    closeModal('time-modal');
+    resetTimer();
+    await loadTime();
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function deleteTimeEntry() {
+  if (!editingTime || !confirm('Delete this entry?')) return;
+  try {
+    await sheetsClear('time', `A${editingTime}:H${editingTime}`);
+    showToast('Entry deleted');
+    closeModal('time-modal');
+    await loadTime();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+// ── CLIENT DROPDOWNS ──────────────────────────────────────────────────────
+function populateClientDropdowns() {
+  const names = allClients.map(c => c.name).sort();
+  ['i-client','t-client','timer-client','time-client-filter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const isFilter = id === 'time-client-filter';
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">${isFilter ? 'All clients' : 'Select client…'}</option>`;
+    names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+    if (cur) sel.value = cur;
+  });
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`section-${tab}`).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => { if (t.textContent.toLowerCase().startsWith(tab)) t.classList.add('active'); });
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { ['client-modal','invoice-modal','time-modal'].forEach(closeModal); }});
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmt(n) { return '$' + (parseFloat(n)||0).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function today() { return new Date().toISOString().slice(0,10); }
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+window.onload = () => {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = initGSI;
+  document.head.appendChild(s);
+};
 </script>
 </body>
 </html>
