@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Studio Tools — daevud</title>
+<title>David Taylor — Client Tools</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #f5f4f0;
-  --surface: #ffffff;
-  --surface2: #f0efe9;
-  --border: #e2e0d8;
-  --border2: #d0cec4;
-  --text: #1a1916;
-  --text-muted: #8a8880;
-  --text-dim: #b8b6b0;
-  --accent: #1a1916;
+  --bg: #141414;
+  --surface: #1e1e1e;
+  --surface2: #272727;
+  --border: #333333;
+  --border2: #444444;
+  --text: #e8e6e0;
+  --text-muted: #888580;
+  --text-dim: #555250;
+  --accent: #e8e6e0;
   --accent2: #c17a3a;
-  --green: #2d6a4f;
-  --green-bg: #e8f5ef;
-  --red: #c0392b;
-  --red-bg: #fdf0ee;
-  --yellow: #b8860b;
-  --yellow-bg: #fdf8e8;
-  --blue: #2c5f8a;
-  --blue-bg: #eaf2f8;
+  --green: #4caf7d;
+  --green-bg: #1a2e22;
+  --red: #e05c4b;
+  --red-bg: #2e1a18;
+  --yellow: #d4a840;
+  --yellow-bg: #2e2510;
+  --blue: #5b8fc4;
+  --blue-bg: #172333;
   --radius: 4px;
   --radius2: 8px;
 }
@@ -57,9 +57,11 @@ body {
 
 .wordmark {
   font-family: 'Instrument Serif', serif;
-  font-size: 18px;
+  font-size: 14px;
   color: var(--text);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .nav-tabs { display: flex; gap: 2px; }
@@ -473,7 +475,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 
 <div class="topbar">
   <div class="topbar-left">
-    <span class="wordmark">daevud</span>
+    <span class="wordmark">DAVID TAYLOR — CLIENT TOOLS</span>
     <nav class="nav-tabs" id="nav-tabs">
       <button class="nav-tab active" onclick="switchTab('clients')">Clients</button>
       <button class="nav-tab" onclick="switchTab('invoices')">Invoices</button>
@@ -526,6 +528,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             <th>Phone</th>
             <th>Rate</th>
             <th onclick="sortClients('status')">Status ↕</th>
+            <th>Projects</th>
             <th onclick="sortClients('followUpDate')">Follow Up ↕</th>
             <th>Last Contact</th>
             <th>Source</th>
@@ -533,7 +536,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           </tr>
         </thead>
         <tbody id="clients-tbody">
-          <tr><td colspan="10" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+          <tr><td colspan="11" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -594,8 +597,9 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <select id="timer-client" style="max-width:180px">
           <option value="">Select client…</option>
         </select>
-        <input type="text" id="timer-project" placeholder="Project / description…" list="timer-project-list" oninput="filterTimerProjects()">
-        <datalist id="timer-project-list"></datalist>
+        <select id="timer-project" onchange="handleProjectSelectChange('timer-project')" style="flex:1;min-width:140px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:12px;outline:none">
+          <option value="">Project…</option>
+        </select>
         <select id="timer-type">
           <option value="Hourly">Hourly</option>
           <option value="Daily">Daily</option>
@@ -639,6 +643,20 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Projects Manager -->
+    <div style="margin-top:28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="font-family:'Instrument Serif',serif;font-size:16px;font-weight:400;color:var(--text)">Projects</h3>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="renderProjectManager()">↻ Refresh</button>
+      </div>
+      <div id="project-manager" class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Project</th><th></th></tr></thead>
+          <tbody id="projects-tbody"><tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">Loading…</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -693,9 +711,11 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group"><label>Client *</label>
-          <select id="i-client"><option value="">Select client…</option></select>
+          <select id="i-client" onchange="onInvoiceClientChange()"><option value="">Select client…</option></select>
         </div>
-        <div class="form-group"><label>Project</label><input type="text" id="i-project" placeholder="Project name"></div>
+        <div class="form-group"><label>Project</label>
+          <select id="i-project" onchange="onInvoiceProjectChange()"><option value="">Select project…</option></select>
+        </div>
         <div class="form-group"><label>Invoice #</label><input type="text" id="i-number" placeholder="INV-001"></div>
         <div class="form-group"><label>Status</label>
           <select id="i-status">
@@ -711,7 +731,10 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <div class="divider"></div>
       <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
         <span style="font-size:11px;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted)">Line Items</span>
-        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="addLineItem()">+ Add line</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" id="import-time-btn" onclick="importTimeEntries()" title="Import from time tracking">⬇ Import time</button>
+          <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="addLineItem()">+ Add line</button>
+        </div>
       </div>
       <div id="line-items"></div>
       <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px;align-items:center">
@@ -746,8 +769,9 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <select id="t-client"><option value="">Select client…</option></select>
         </div>
         <div class="form-group"><label>Project</label>
-          <input type="text" id="t-project" placeholder="Project / description" list="t-project-list">
-          <datalist id="t-project-list"></datalist>
+          <select id="t-project" onchange="handleProjectSelectChange('t-project')">
+            <option value="">Select or type new…</option>
+          </select>
         </div>
         <div class="form-group"><label>Type</label>
           <select id="t-type">
@@ -926,7 +950,7 @@ async function loadClients() {
 function renderClients(list) {
   const tbody = document.getElementById('clients-tbody');
   document.getElementById('client-count').textContent = list.length + (list.length===1?' client':' clients');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet.</p></div></td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet.</p></div></td></tr>`; return; }
   const today = new Date(); today.setHours(0,0,0,0);
   tbody.innerHTML = list.map(c => {
     let fuClass = '', fuText = c.followUpDate || '—';
@@ -937,6 +961,10 @@ function renderClients(list) {
       else if (diff <= 7) { fuClass = 'followup-soon'; fuText = diff === 0 ? 'Today' : `In ${diff}d`; }
       else { fuClass = 'followup-ok'; fuText = c.followUpDate; }
     }
+    const clientProjects = getProjectsForClient(c.name);
+    const projHTML = clientProjects.length
+      ? clientProjects.map(p => `<span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);margin:1px 2px 1px 0;white-space:nowrap">${esc(p)}</span>`).join('')
+      : '<span style="color:var(--text-dim)">—</span>';
     return `<tr onclick="openClientModal(${c.rowIndex})">
       <td class="td-name">${esc(c.name)}</td>
       <td class="td-muted">${esc(c.company)}</td>
@@ -944,6 +972,7 @@ function renderClients(list) {
       <td class="td-mono">${esc(c.phone)}</td>
       <td class="td-mono">${esc(c.rate)}</td>
       <td><span class="pill pill-${c.status.toLowerCase()}">${esc(c.status)}</span></td>
+      <td style="max-width:200px">${projHTML}</td>
       <td class="${fuClass}">${fuText}</td>
       <td class="td-muted">${c.lastContacted||'—'}</td>
       <td class="td-muted">${esc(c.source)}</td>
@@ -1142,6 +1171,7 @@ function openInvoiceModal(rowIndex) {
     const inv = allInvoices.find(x => x.rowIndex === rowIndex);
     if (inv) {
       document.getElementById('i-client').value = inv.client;
+      onInvoiceClientChange(); // populate project dropdown
       document.getElementById('i-project').value = inv.project;
       document.getElementById('i-number').value = inv.number;
       document.getElementById('i-status').value = inv.status;
@@ -1151,8 +1181,9 @@ function openInvoiceModal(rowIndex) {
       try { JSON.parse(inv.lineItems).forEach(li => addLineItem(li)); } catch(e) { addLineItem(); }
     }
   } else {
-    ['i-project','i-notes'].forEach(id => document.getElementById(id).value = '');
+    ['i-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('i-client').value = '';
+    document.getElementById('i-project').innerHTML = '<option value="">Select project…</option>';
     document.getElementById('i-status').value = 'Draft';
     const todayStr = today();
     document.getElementById('i-date').value = todayStr;
@@ -1233,7 +1264,7 @@ async function saveInvoice() {
   const row = [
     document.getElementById('i-number').value.trim(),
     client,
-    document.getElementById('i-project').value.trim(),
+    document.getElementById('i-project').value,
     document.getElementById('i-date').value,
     document.getElementById('i-due-date').value,
     amount,
@@ -1272,6 +1303,7 @@ async function loadTime() {
     })).filter(t => t.date || t.client);
     renderTime(allTime);
     renderTimeStats();
+    renderProjectManager();
   } catch(e) { showToast('Failed to load time', 'error'); renderTime([]); }
 }
 
@@ -1362,10 +1394,10 @@ function logTimerEntry() {
   if (timerSeconds === 0) { showToast('Start the timer first', 'error'); return; }
   const hrs = (timerSeconds / 3600).toFixed(2);
   const timerClientVal = document.getElementById('timer-client').value;
+  const timerProjectVal = document.getElementById('timer-project').value;
   document.getElementById('t-date').value = today();
   document.getElementById('t-client').value = timerClientVal;
-  updateProjectDatalist('t-project-list', timerClientVal);
-  document.getElementById('t-project').value = document.getElementById('timer-project').value;
+  updateProjectSelect('t-project', timerClientVal, timerProjectVal);
   document.getElementById('t-type').value = document.getElementById('timer-type').value;
   document.getElementById('t-duration').value = hrs;
   document.getElementById('t-rate').value = document.getElementById('timer-rate').value;
@@ -1387,8 +1419,7 @@ function openTimeModal(rowIndex) {
     if (t) {
       document.getElementById('t-date').value = t.date;
       document.getElementById('t-client').value = t.client;
-      updateProjectDatalist('t-project-list', t.client);
-      document.getElementById('t-project').value = t.project;
+      updateProjectSelect('t-project', t.client, t.project);
       document.getElementById('t-type').value = t.type;
       document.getElementById('t-duration').value = t.duration;
       document.getElementById('t-rate').value = t.rate;
@@ -1396,9 +1427,10 @@ function openTimeModal(rowIndex) {
     }
   } else {
     document.getElementById('t-date').value = today();
-    ['t-client','t-project','t-duration','t-rate','t-notes'].forEach(id => document.getElementById(id).value = '');
+    ['t-duration','t-rate','t-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('t-client').value = '';
     document.getElementById('t-type').value = 'Hourly';
-    updateProjectDatalist('t-project-list', '');
+    updateProjectSelect('t-project', '');
   }
   openModal('time-modal');
 }
@@ -1407,10 +1439,18 @@ async function saveTimeEntry() {
   const duration = parseFloat(document.getElementById('t-duration').value)||0;
   const rate = parseFloat(document.getElementById('t-rate').value)||0;
   const amount = duration * rate;
+  const projectVal = document.getElementById('t-project').value;
+  if (projectVal === '__new__') { showToast('Please enter a project name', 'error'); return; }
+  const clientVal = document.getElementById('t-client').value;
+  // Auto-save new project if not already tracked
+  if (projectVal && clientVal && !allProjects.find(p => p.client === clientVal && p.name === projectVal)) {
+    allProjects.push({ client: clientVal, name: projectVal, type: '', rate: '' });
+    sheetsAppend('projects', [[clientVal, projectVal, '', '']]).catch(() => {});
+  }
   const row = [
     document.getElementById('t-date').value,
-    document.getElementById('t-client').value,
-    document.getElementById('t-project').value.trim(),
+    clientVal,
+    projectVal,
     document.getElementById('t-type').value,
     duration, rate, amount,
     document.getElementById('t-notes').value.trim()
@@ -1443,6 +1483,36 @@ async function loadProjects() {
       client: row[0]||'', name: row[1]||'', type: row[2]||'', rate: row[3]||''
     })).filter(p => p.client && p.name);
   } catch(e) { allProjects = []; }
+  renderProjectManager();
+}
+
+function renderProjectManager() {
+  const tbody = document.getElementById('projects-tbody');
+  if (!tbody) return;
+  // Merge manual projects and time-entry-learned projects
+  const allKnown = [];
+  const seen = new Set();
+  allProjects.forEach(p => {
+    const key = p.client + '|||' + p.name;
+    if (!seen.has(key)) { seen.add(key); allKnown.push({ client: p.client, name: p.name, inSheet: true }); }
+  });
+  allTime.forEach(t => {
+    if (!t.client || !t.project) return;
+    const key = t.client + '|||' + t.project;
+    if (!seen.has(key)) { seen.add(key); allKnown.push({ client: t.client, name: t.project, inSheet: false }); }
+  });
+  allKnown.sort((a,b) => a.client.localeCompare(b.client) || a.name.localeCompare(b.name));
+  if (!allKnown.length) {
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">No projects yet. They appear automatically when you log time.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = allKnown.map(p => `
+    <tr>
+      <td class="td-muted">${esc(p.client)}</td>
+      <td class="td-name">${esc(p.name)}${!p.inSheet ? ' <span style="font-size:10px;color:var(--text-dim)">(from time log)</span>' : ''}</td>
+      <td style="text-align:right">${p.inSheet ? `<button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteProject('${esc(p.client)}','${esc(p.name)}')">Delete</button>` : '<span style="font-size:10px;color:var(--text-dim)">delete entry to remove</span>'}</td>
+    </tr>
+  `).join('');
 }
 
 function getProjectsForClient(clientName) {
@@ -1455,23 +1525,118 @@ function getProjectsForClient(clientName) {
   return [...new Set([...manual, ...learned])].sort();
 }
 
-function updateProjectDatalist(listId, clientName) {
-  const list = document.getElementById(listId);
-  if (!list) return;
+function updateProjectSelect(selectId, clientName, currentValue) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
   const projects = getProjectsForClient(clientName);
-  list.innerHTML = projects.map(p => `<option value="${p}">`).join('');
+  const cur = currentValue !== undefined ? currentValue : sel.value;
+  sel.innerHTML = `<option value="">Select or type new…</option>`;
+  projects.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+  // Add "New project…" sentinel at the bottom
+  const newOpt = document.createElement('option');
+  newOpt.value = '__new__'; newOpt.textContent = '+ New project…';
+  sel.appendChild(newOpt);
+  if (cur) sel.value = cur;
+}
+
+// Keep legacy function name for any remaining callers
+function updateProjectDatalist(listId, clientName) {
+  updateProjectSelect(listId === 't-project-list' ? 't-project' : listId, clientName);
 }
 
 function filterTimerProjects() {
   const client = document.getElementById('timer-client').value;
-  updateProjectDatalist('timer-project-list', client);
+  updateProjectSelect('timer-project', client);
+}
+
+function handleProjectSelectChange(selectId) {
+  const sel = document.getElementById(selectId);
+  if (sel.value === '__new__') {
+    const name = prompt('Enter new project name:');
+    if (name && name.trim()) {
+      // Add to allProjects in memory and save to sheet
+      const clientSel = selectId === 't-project' ? document.getElementById('t-client').value
+                      : selectId === 'timer-project' ? document.getElementById('timer-client').value : '';
+      const trimmed = name.trim();
+      if (clientSel && !allProjects.find(p => p.client === clientSel && p.name === trimmed)) {
+        allProjects.push({ client: clientSel, name: trimmed, type: '', rate: '' });
+        sheetsAppend('projects', [[clientSel, trimmed, '', '']]).catch(() => {});
+      }
+      updateProjectSelect(selectId, clientSel, trimmed);
+    } else {
+      sel.value = '';
+    }
+  }
+}
+
+async function deleteProject(clientName, projectName) {
+  if (!confirm(`Delete project "${projectName}" for ${clientName}?\n\nThis removes it from the projects list only — time entries are not affected.`)) return;
+  const idx = allProjects.findIndex(p => p.client === clientName && p.name === projectName);
+  if (idx === -1) { showToast('Project not found', 'error'); return; }
+  // Find the row index in the sheet (idx + 2 because row 1 is header)
+  try {
+    await sheetsClear('projects', `A${idx+2}:D${idx+2}`);
+    allProjects.splice(idx, 1);
+    showToast('Project deleted ✓');
+    // Refresh dropdowns
+    populateClientDropdowns();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+// ── INVOICE PROJECT DROPDOWN ──────────────────────────────────────────────
+function onInvoiceClientChange() {
+  const client = document.getElementById('i-client').value;
+  const sel = document.getElementById('i-project');
+  const projects = getProjectsForClient(client);
+  sel.innerHTML = `<option value="">Select project…</option>`;
+  projects.forEach(p => {
+    const o = document.createElement('option');
+    o.value = p; o.textContent = p;
+    sel.appendChild(o);
+  });
+  // Update import button visibility
+  document.getElementById('import-time-btn').style.opacity = client ? '1' : '0.4';
+}
+
+function onInvoiceProjectChange() {
+  // Optionally auto-import when project is selected for new invoices
+  // (user can still click manually)
+}
+
+function importTimeEntries() {
+  const client = document.getElementById('i-client').value;
+  const project = document.getElementById('i-project').value;
+  if (!client) { showToast('Select a client first', 'error'); return; }
+  
+  let entries = allTime.filter(t => t.client === client && t.amount > 0);
+  if (project) entries = entries.filter(t => t.project === project);
+  
+  if (!entries.length) {
+    showToast(project ? `No time entries for ${project}` : `No time entries for ${client}`, 'error');
+    return;
+  }
+  
+  // Clear existing line items
+  document.getElementById('line-items').innerHTML = '';
+  lineItemCount = 0;
+  
+  entries.forEach(t => {
+    const desc = [t.date, t.project, t.notes].filter(Boolean).join(' — ');
+    addLineItem({ desc, qty: t.duration, rate: t.rate });
+  });
+  
+  showToast(`Imported ${entries.length} entr${entries.length===1?'y':'ies'} ✓`, 'success');
 }
 
 // ── CLIENT DROPDOWNS ──────────────────────────────────────────────────────
 function populateClientDropdowns() {
   // Add change listeners for project filtering
-  document.getElementById('timer-client').onchange = function() { updateProjectDatalist('timer-project-list', this.value); };
-  document.getElementById('t-client').onchange = function() { updateProjectDatalist('t-project-list', this.value); };
+  document.getElementById('timer-client').onchange = function() { updateProjectSelect('timer-project', this.value); };
+  document.getElementById('t-client').onchange = function() { updateProjectSelect('t-project', this.value); };
 
   const names = allClients.map(c => c.name).sort();
   ['i-client','t-client','timer-client','time-client-filter'].forEach(id => {
@@ -1544,8 +1709,8 @@ function printInvoice() {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px">
       <div>
-        <div style="font-family:'Instrument Serif',serif;font-size:28px;margin-bottom:8px">daevud</div>
-        <div style="color:#8a8880;font-size:12px;line-height:1.8">David Taylor<br>daevud@gmail.com<br>daevud.com</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">David Taylor</div>
+        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037<br>www.daevud.com</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
