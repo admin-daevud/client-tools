@@ -113,10 +113,10 @@ body {
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
-.btn-primary { background: var(--text); color: #fff; }
-.btn-primary:hover { background: #2d2c28; }
-.btn-ghost { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border2); }
-.btn-ghost:hover { color: var(--text); border-color: #555; background: #333333; }
+.btn-primary { background: #e8e6e0; color: #141414; }
+.btn-primary:hover { background: #ffffff; }
+.btn-ghost { background: #2e2e2e; color: #c8c6c0; border: 1px solid #484644; }
+.btn-ghost:hover { color: #f0ede6; border-color: #666; background: #3a3a3a; }
 .btn-danger { background: transparent; color: var(--red); border: 1px solid transparent; }
 .btn-danger:hover { background: var(--red-bg); border-color: rgba(192,57,43,0.2); }
 .btn-accent { background: var(--accent2); color: #fff; }
@@ -690,7 +690,8 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <div class="form-group full"><label>Notes</label><textarea id="c-notes" placeholder="General notes, preferences…"></textarea></div>
         <div class="form-group full" id="c-projects-group" style="display:none">
           <label>Projects</label>
-          <div id="c-projects-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px"></div>
+          <select id="c-projects-list" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;color:var(--text);font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:12px;outline:none">
+          </select>
         </div>
       </div>
       <div class="inline-edit-note" id="gcal-note" style="display:none">📅 A Google Calendar reminder will be created for the follow up date.</div>
@@ -751,7 +752,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
     <div class="modal-footer">
       <button class="btn btn-danger" id="invoice-delete-btn" style="display:none" onclick="deleteInvoice()">Delete</button>
       <div class="modal-footer-right">
-        <button class="btn btn-ghost" id="pdf-btn" style="display:none" onclick="printInvoice()">⬇ Save as PDF</button>
+        <button class="btn btn-ghost" id="pdf-btn" onclick="printInvoice()">⬇ Save as PDF</button>
         <button class="btn btn-ghost" onclick="closeModal('invoice-modal')">Cancel</button>
         <button class="btn btn-primary" onclick="saveInvoice()">Save</button>
       </div>
@@ -1023,14 +1024,12 @@ function openClientModal(rowIndex) {
       document.getElementById('c-followup-date').value = c.followUpDate;
       document.getElementById('c-followup-notes').value = c.followUpNotes;
       document.getElementById('c-source').value = c.source;
-      // Populate projects
+      // Populate projects dropdown
       const projects = getProjectsForClient(c.name);
       const grp = document.getElementById('c-projects-group');
-      const list = document.getElementById('c-projects-list');
+      const sel = document.getElementById('c-projects-list');
       if (projects.length) {
-        list.innerHTML = projects.map(p =>
-          `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;background:var(--surface2);border:1px solid var(--border);color:var(--text-muted)">${esc(p)}</span>`
-        ).join('');
+        sel.innerHTML = projects.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
         grp.style.display = '';
       } else {
         grp.style.display = 'none';
@@ -1180,7 +1179,6 @@ function openInvoiceModal(rowIndex) {
   const isEdit = !!rowIndex;
   document.getElementById('invoice-modal-title').textContent = isEdit ? 'Edit invoice' : 'New invoice';
   document.getElementById('invoice-delete-btn').style.display = isEdit ? '' : 'none';
-  document.getElementById('pdf-btn').style.display = isEdit ? '' : 'none';
   lineItemCount = 0;
   document.getElementById('line-items').innerHTML = '';
 
@@ -1228,9 +1226,9 @@ function addLineItem(data) {
   div.id = `li-${id}`;
   div.style.cssText = 'display:grid;grid-template-columns:1fr 80px 80px 80px 28px;gap:6px;margin-bottom:6px;align-items:center';
   div.innerHTML = `
-    <input type="text" placeholder="Description" value="${esc(data?.desc||'')}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif">
-    <input type="number" placeholder="Qty" value="${data?.qty||1}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;text-align:right">
-    <input type="number" placeholder="Rate" value="${data?.rate||''}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;text-align:right">
+    <input type="text" placeholder="Description" value="${esc(data?.desc||'')}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;color:var(--text)">
+    <input type="number" placeholder="Qty" value="${data?.qty||1}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;text-align:right;color:var(--text)">
+    <input type="number" placeholder="Rate" value="${data?.rate||''}" oninput="updateInvoiceTotal()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 8px;font-size:12px;outline:none;font-family:Helvetica Neue, Helvetica, Arial, sans-serif;text-align:right;color:var(--text)">
     <span id="li-total-${id}" style="font-family:Helvetica Neue, Helvetica, Arial, sans-serif;font-size:12px;text-align:right;color:var(--text-muted)">$0</span>
     <button onclick="document.getElementById('li-${id}').remove();updateInvoiceTotal()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:0">×</button>
   `;
@@ -1408,8 +1406,10 @@ function formatTime(s) {
 }
 
 function logTimerEntry() {
-  if (timerSeconds === 0) { showToast('Start the timer first', 'error'); return; }
-  const hrs = (timerSeconds / 3600).toFixed(2);
+  const type = document.getElementById('timer-type').value;
+  const isFlatFee = type === 'Flat';
+  if (!isFlatFee && timerSeconds === 0) { showToast('Start the timer first', 'error'); return; }
+  const hrs = isFlatFee ? '1' : (timerSeconds / 3600).toFixed(2);
   const timerClientVal = document.getElementById('timer-client').value;
   const timerProjectVal = document.getElementById('timer-project').value;
   document.getElementById('t-date').value = today();
@@ -1656,13 +1656,28 @@ function populateClientDropdowns() {
   document.getElementById('t-client').onchange = function() { updateProjectSelect('t-project', this.value); };
 
   const names = allClients.map(c => c.name).sort();
-  ['i-client','t-client','timer-client','time-client-filter'].forEach(id => {
+  // Invoice and filter dropdowns use contact name (for matching)
+  ['i-client','time-client-filter'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
     const isFilter = id === 'time-client-filter';
     const cur = sel.value;
     sel.innerHTML = `<option value="">${isFilter ? 'All clients' : 'Select client…'}</option>`;
     names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+    if (cur) sel.value = cur;
+  });
+  // Timer and time entry dropdowns show company name but store contact name as value
+  ['t-client','timer-client'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">Select client…</option>`;
+    allClients.slice().sort((a,b) => (a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.name;
+      o.textContent = c.company ? c.company : c.name;
+      sel.appendChild(o);
+    });
     if (cur) sel.value = cur;
   });
 }
@@ -1702,8 +1717,22 @@ function showToast(msg, type='') {
 
 // ── PRINT INVOICE ────────────────────────────────────────────────────────
 function printInvoice() {
-  const inv = allInvoices.find(x => x.rowIndex === editingInvoice);
-  if (!inv) return;
+  // Work with either a saved invoice or the current modal state
+  let inv = editingInvoice ? allInvoices.find(x => x.rowIndex === editingInvoice) : null;
+  if (!inv) {
+    // Build a temporary invoice from current modal fields
+    const items = getLineItems();
+    inv = {
+      number: document.getElementById('i-number').value || '—',
+      client: document.getElementById('i-client').value || '—',
+      project: document.getElementById('i-project').value || '',
+      date: document.getElementById('i-date').value || '',
+      dueDate: document.getElementById('i-due-date').value || '',
+      status: document.getElementById('i-status').value || 'Draft',
+      notes: document.getElementById('i-notes').value || '',
+      lineItems: JSON.stringify(items)
+    };
+  }
   // Look up company name from CRM
   const clientRecord = allClients.find(c => c.name === inv.client);
   inv.company = clientRecord?.company || '';
