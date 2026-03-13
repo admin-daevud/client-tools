@@ -503,6 +503,11 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 
   <!-- ══ CLIENTS ══ -->
   <div class="section active" id="section-clients">
+    <!-- Unread follow-up banner -->
+    <div id="gmail-followup-banner" style="display:none;background:var(--yellow-bg);border:1px solid var(--yellow);border-radius:var(--radius2);padding:10px 16px;margin-bottom:16px;display:none;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--yellow)">✉ Unread emails from follow-up clients:</span>
+      <span id="gmail-followup-list" style="font-size:12px;color:var(--text-muted)"></span>
+    </div>
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="search-wrap">
@@ -517,7 +522,10 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         </select>
         <span class="count-badge" id="client-count">0 clients</span>
       </div>
-      <button class="btn btn-primary" onclick="openClientModal()">+ Add client</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="gmail-sync-btn" onclick="syncGmailLastContacted()" title="Pull latest email date for each client and update Last Contacted">✉ Sync Gmail</button>
+        <button class="btn btn-primary" onclick="openClientModal()">+ Add client</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -695,7 +703,8 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             <th onclick="sortColor('client')">Client ↕</th>
             <th onclick="sortColor('project')">Project ↕</th>
             <th>Round</th>
-            <th>Color Space</th>
+            <th>Working Color Space</th>
+            <th>Delivery Color Space</th>
             <th>Color Science</th>
             <th>LUTs</th>
             <th>Software</th>
@@ -746,6 +755,17 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         </div>
       </div>
       <div class="inline-edit-note" id="gcal-note" style="display:none">📅 A Google Calendar reminder will be created for the follow up date.</div>
+
+      <!-- Gmail thread preview -->
+      <div id="gmail-thread-panel" style="display:none;margin-top:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:9px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted)">Recent Gmail Threads</span>
+          <button class="btn btn-ghost" style="padding:3px 9px;font-size:11px" id="gmail-thread-refresh" onclick="loadClientGmailThreads()">↻ Refresh</button>
+        </div>
+        <div id="gmail-thread-list" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);max-height:200px;overflow-y:auto">
+          <div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Loading threads…</div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="client-delete-btn" style="display:none" onclick="deleteClient()">Delete</button>
@@ -880,9 +900,9 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           </select>
         </div>
 
-        <!-- Color Space combobox -->
+        <!-- Working Color Space combobox -->
         <div class="form-group">
-          <label>Color Space / Gamma</label>
+          <label>Working Color Space</label>
           <div style="display:flex;gap:6px;align-items:center">
             <select id="cs-colorspace" style="flex:1" onchange="handleComboSelect('cs-colorspace','cs-colorspace-custom')">
               <option value="">Select…</option>
@@ -899,6 +919,27 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             </select>
           </div>
           <input type="text" id="cs-colorspace-custom" placeholder="Type new color space…" style="display:none;margin-top:6px" onblur="saveCustomColorSpace()">
+        </div>
+
+        <!-- Delivery Color Space combobox -->
+        <div class="form-group">
+          <label>Delivery Color Space</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="cs-deliveryspace" style="flex:1" onchange="handleComboSelect('cs-deliveryspace','cs-deliveryspace-custom')">
+              <option value="">Select…</option>
+              <option value="Rec.709">Rec.709</option>
+              <option value="Rec.2020 PQ (HDR10)">Rec.2020 PQ (HDR10)</option>
+              <option value="Rec.2020 HLG">Rec.2020 HLG</option>
+              <option value="P3-D65">P3-D65</option>
+              <option value="S-Log3 / S-Gamut3.Cine">S-Log3 / S-Gamut3.Cine</option>
+              <option value="Log C3 / AWG3">Log C3 / AWG3</option>
+              <option value="Log C4 / AWG4">Log C4 / AWG4</option>
+              <option value="BRAW / BMD Film Gen5">BRAW / BMD Film Gen5</option>
+              <option value="RED Log3G10 / REDWideGamutRGB">RED Log3G10 / REDWideGamutRGB</option>
+              <option value="__custom__">+ Add new…</option>
+            </select>
+          </div>
+          <input type="text" id="cs-deliveryspace-custom" placeholder="Type new delivery space…" style="display:none;margin-top:6px" onblur="saveCustomDeliverySpace()">
         </div>
 
         <!-- Color Science combobox -->
@@ -951,8 +992,23 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <div class="form-group full"><label>Session Notes</label>
           <textarea id="cs-notes" placeholder="Creative decisions, grade approach, technical notes, what was tried and rejected…" style="min-height:90px"></textarea>
         </div>
-        <div class="form-group full"><label>Client Feedback</label>
+        <div class="form-group full">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <label style="margin-bottom:0">Client Feedback</label>
+            <button class="btn btn-ghost" style="padding:3px 9px;font-size:11px" onclick="openGmailFeedbackImport()">✉ Import from Gmail</button>
+          </div>
           <textarea id="cs-feedback" placeholder="Paste client notes here — verbatim is best for the paper trail…" style="min-height:80px"></textarea>
+          <!-- Gmail import picker -->
+          <div id="gmail-feedback-panel" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
+              <input type="text" id="gmail-feedback-search" placeholder="Search by subject or sender…" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:5px 9px;color:var(--text);font-size:12px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif;outline:none">
+              <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="searchGmailFeedback()">Search</button>
+              <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="document.getElementById('gmail-feedback-panel').style.display='none'">✕</button>
+            </div>
+            <div id="gmail-feedback-results" style="max-height:180px;overflow-y:auto;padding:4px 0">
+              <div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">Search for an email thread above to import feedback.</div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -973,21 +1029,21 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 // ── CONFIG ──────────────────────────────────────────────────────────────
 const CLIENT_ID = '942988921389-un6hlms925c4ej0cuss2et1no6r6grkf.apps.googleusercontent.com';
 const SHEET_ID  = '1HxBj_k2lHQFQYgd0wiLnpHHsUquRrNaMRqJaAT6gH7o';
-const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events';
+const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.modify';
 
 const SHEETS = {
   clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
   invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
   time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] },
   projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate'] },
-  color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','ColorScience','LUTs','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
+  color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
   color_meta: { name: 'color_meta', headers: ['Type','Value'] }
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────
 let accessToken;
 let allClients = [], allInvoices = [], allTime = [], allProjects = [], allColor = [];
-let customColorSpaces = [], customColorSciences = [];
+let customColorSpaces = [], customColorSciences = [], customDeliverySpaces = [];
 let editingClient = null, editingInvoice = null, editingTime = null, editingColor = null;
 let clientSort = null, clientSortAsc = true;
 let invoiceSort = null, invoiceSortAsc = true;
@@ -1102,10 +1158,247 @@ async function ensureAllSheets() {
 
 function colLetter(n) { return String.fromCharCode(64 + n); }
 
+// ── GMAIL HELPERS ─────────────────────────────────────────────────────────
+
+// Core Gmail fetch
+async function gmailGet(path) {
+  const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/${path}`, {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// Decode base64url email body
+function decodeBase64(str) {
+  try {
+    return decodeURIComponent(escape(atob(str.replace(/-/g,'+').replace(/_/g,'/'))));
+  } catch(e) { return ''; }
+}
+
+// Get plain text body from a message payload
+function extractBody(payload) {
+  if (!payload) return '';
+  const tryPart = (parts) => {
+    for (const p of (parts||[])) {
+      if (p.mimeType === 'text/plain' && p.body?.data) return decodeBase64(p.body.data);
+      if (p.parts) { const r = tryPart(p.parts); if (r) return r; }
+    }
+    return '';
+  };
+  if (payload.mimeType === 'text/plain' && payload.body?.data) return decodeBase64(payload.body.data);
+  return tryPart(payload.parts);
+}
+
+// Get header value from message headers array
+function getHeader(headers, name) {
+  return (headers||[]).find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+}
+
+// Format epoch ms to readable date string
+function epochToDate(ms) {
+  return new Date(parseInt(ms)).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+// ── GMAIL: SYNC LAST CONTACTED ────────────────────────────────────────────
+async function syncGmailLastContacted() {
+  const btn = document.getElementById('gmail-sync-btn');
+  btn.textContent = '↻ Syncing…'; btn.disabled = true;
+  let updated = 0;
+  try {
+    for (const client of allClients) {
+      if (!client.email) continue;
+      try {
+        // Search for any email to/from this client
+        const q = encodeURIComponent(`to:${client.email} OR from:${client.email}`);
+        const data = await gmailGet(`messages?maxResults=1&q=${q}`);
+        if (!data.messages?.length) continue;
+        const msg = await gmailGet(`messages/${data.messages[0].id}?format=metadata&metadataHeaders=Date`);
+        const dateStr = getHeader(msg.payload?.headers, 'Date');
+        if (!dateStr) continue;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) continue;
+        const iso = d.toISOString().slice(0,10);
+        // Only update if newer than existing
+        if (!client.lastContacted || iso > client.lastContacted) {
+          await sheetsUpdate('clients', `H${client.rowIndex}`, [[iso]]);
+          client.lastContacted = iso;
+          updated++;
+        }
+      } catch(e) { /* skip individual failures silently */ }
+    }
+    showToast(updated ? `Updated ${updated} client${updated===1?'':'s'} ✓` : 'All contacts up to date', 'success');
+    await loadClients();
+  } catch(e) {
+    showToast('Gmail sync failed', 'error');
+  } finally {
+    btn.textContent = '✉ Sync Gmail'; btn.disabled = false;
+  }
+}
+
+// ── GMAIL: UNREAD FOLLOW-UP BANNER ───────────────────────────────────────
+async function checkUnreadFollowUps() {
+  const banner = document.getElementById('gmail-followup-banner');
+  const listEl = document.getElementById('gmail-followup-list');
+  try {
+    // Get clients with a follow-up date set
+    const followUpClients = allClients.filter(c => c.email && c.followUpDate);
+    if (!followUpClients.length) return;
+    const hits = [];
+    for (const client of followUpClients) {
+      try {
+        const q = encodeURIComponent(`from:${client.email} is:unread`);
+        const data = await gmailGet(`messages?maxResults=1&q=${q}`);
+        if (data.messages?.length) hits.push(client.name || client.email);
+      } catch(e) { /* skip */ }
+    }
+    if (hits.length) {
+      listEl.textContent = hits.join(', ');
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch(e) { banner.style.display = 'none'; }
+}
+
+// ── GMAIL: CLIENT THREAD PREVIEW ──────────────────────────────────────────
+let currentThreadClientEmail = '';
+
+async function loadClientGmailThreads() {
+  const panel = document.getElementById('gmail-thread-list');
+  panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px"><span class="spinner"></span>Loading…</div>`;
+  if (!currentThreadClientEmail) {
+    panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No email address on this client.</div>`;
+    return;
+  }
+  try {
+    const q = encodeURIComponent(`to:${currentThreadClientEmail} OR from:${currentThreadClientEmail}`);
+    const data = await gmailGet(`threads?maxResults=5&q=${q}`);
+    if (!data.threads?.length) {
+      panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No email threads found for this client.</div>`;
+      return;
+    }
+    // Fetch thread details
+    const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date`)));
+    panel.innerHTML = threads.map(thread => {
+      const msg = thread.messages?.[0];
+      if (!msg) return '';
+      const subject = getHeader(msg.payload?.headers, 'Subject') || '(no subject)';
+      const from    = getHeader(msg.payload?.headers, 'From');
+      const date    = epochToDate(msg.internalDate);
+      const count   = thread.messages.length;
+      const unread  = thread.messages.some(m => m.labelIds?.includes('UNREAD'));
+      return `<div style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''" onclick="expandThread('${thread.id}','${esc(subject)}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:12px;font-weight:${unread?'600':'400'};color:${unread?'var(--text)':'var(--text-muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${esc(subject)}</span>
+          <span style="font-size:10px;color:var(--text-dim);white-space:nowrap">${date}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+          <span style="font-size:11px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${esc(from)}</span>
+          <span style="font-size:10px;color:var(--text-dim)">${count} msg${count===1?'':'s'}${unread?' · <span style="color:var(--blue)">unread</span>':''}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--red);font-size:12px">Could not load Gmail threads. Check permissions.</div>`;
+  }
+}
+
+async function expandThread(threadId, subject) {
+  const panel = document.getElementById('gmail-thread-list');
+  panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px"><span class="spinner"></span>Loading thread…</div>`;
+  try {
+    const thread = await gmailGet(`threads/${threadId}?format=full`);
+    const msgs = thread.messages || [];
+    panel.innerHTML = `
+      <div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px" onclick="loadClientGmailThreads()">← Back</button>
+        <span style="font-size:12px;color:var(--text);font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(subject)}</span>
+      </div>
+      ${msgs.map(msg => {
+        const from = getHeader(msg.payload?.headers, 'From');
+        const date = epochToDate(msg.internalDate);
+        const body = extractBody(msg.payload).slice(0,600).trim();
+        return `<div style="padding:10px 12px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:500;color:var(--text-muted)">${esc(from)}</span>
+            <span style="font-size:10px;color:var(--text-dim)">${date}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap">${esc(body)}${body.length>=600?'\n…':''}</div>
+        </div>`;
+      }).join('')}`;
+  } catch(e) {
+    panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--red);font-size:12px">Could not load thread.</div>`;
+  }
+}
+
+// ── GMAIL: COLOR FEEDBACK IMPORT ──────────────────────────────────────────
+function openGmailFeedbackImport() {
+  const panel = document.getElementById('gmail-feedback-panel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  if (panel.style.display !== 'none') {
+    // Pre-populate search with selected client email
+    const clientName = document.getElementById('cs-client').value;
+    const client = allClients.find(c => c.name === clientName);
+    if (client?.email) document.getElementById('gmail-feedback-search').value = client.email;
+    searchGmailFeedback();
+  }
+}
+
+async function searchGmailFeedback() {
+  const results = document.getElementById('gmail-feedback-results');
+  const query = document.getElementById('gmail-feedback-search').value.trim();
+  if (!query) return;
+  results.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px"><span class="spinner"></span>Searching…</div>`;
+  try {
+    const q = encodeURIComponent(query);
+    const data = await gmailGet(`messages?maxResults=8&q=${q}`);
+    if (!data.messages?.length) {
+      results.innerHTML = `<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px">No emails found.</div>`;
+      return;
+    }
+    const msgs = await Promise.all(data.messages.slice(0,8).map(m =>
+      gmailGet(`messages/${m.id}?format=metadata&metadataHeaders=Subject,From,Date`)
+    ));
+    results.innerHTML = msgs.map(msg => {
+      const subject = getHeader(msg.payload?.headers, 'Subject') || '(no subject)';
+      const from    = getHeader(msg.payload?.headers, 'From');
+      const date    = epochToDate(msg.internalDate);
+      return `<div style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''" onclick="importEmailFeedback('${msg.id}')">
+        <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(subject)}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:2px">
+          <span style="font-size:11px;color:var(--text-dim)">${esc(from)}</span>
+          <span style="font-size:11px;color:var(--text-dim)">${date}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    results.innerHTML = `<div style="padding:14px;text-align:center;color:var(--red);font-size:12px">Search failed.</div>`;
+  }
+}
+
+async function importEmailFeedback(msgId) {
+  try {
+    const msg = await gmailGet(`messages/${msgId}?format=full`);
+    const subject = getHeader(msg.payload?.headers, 'Subject') || '';
+    const from    = getHeader(msg.payload?.headers, 'From') || '';
+    const date    = epochToDate(msg.internalDate);
+    const body    = extractBody(msg.payload).trim();
+    const textarea = document.getElementById('cs-feedback');
+    const header  = `From: ${from}\nDate: ${date}\nSubject: ${subject}\n${'─'.repeat(40)}\n`;
+    textarea.value = (textarea.value ? textarea.value + '\n\n' : '') + header + body;
+    document.getElementById('gmail-feedback-panel').style.display = 'none';
+    showToast('Email imported ✓', 'success');
+  } catch(e) {
+    showToast('Import failed', 'error');
+  }
+}
+
 // ── LOAD ALL ──────────────────────────────────────────────────────────────
 async function loadAll() {
   await Promise.all([loadClients(), loadInvoices(), loadTime(), loadProjects(), loadColor(), loadColorMeta()]);
   populateClientDropdowns();
+  checkUnreadFollowUps(); // non-blocking, runs in background
 }
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────
@@ -1207,11 +1500,23 @@ function openClientModal(rowIndex) {
       } else {
         grp.style.display = 'none';
       }
+      // Gmail thread panel
+      const threadPanel = document.getElementById('gmail-thread-panel');
+      if (c.email) {
+        currentThreadClientEmail = c.email;
+        threadPanel.style.display = '';
+        loadClientGmailThreads();
+      } else {
+        currentThreadClientEmail = '';
+        threadPanel.style.display = 'none';
+      }
     }
   } else {
     ['c-name','c-company','c-email','c-phone','c-rate','c-notes','c-last-contacted','c-followup-date','c-followup-notes','c-source'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-status').value = 'Prospect';
     document.getElementById('c-projects-group').style.display = 'none';
+    document.getElementById('gmail-thread-panel').style.display = 'none';
+    currentThreadClientEmail = '';
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
@@ -1865,9 +2170,10 @@ async function loadColorMeta() {
   try {
     const data = await sheetsGet('color_meta', 'A2:B500');
     const rows = data.values || [];
-    customColorSpaces   = rows.filter(r => r[0]==='colorspace').map(r => r[1]).filter(Boolean);
-    customColorSciences = rows.filter(r => r[0]==='colorscience').map(r => r[1]).filter(Boolean);
-  } catch(e) { customColorSpaces = []; customColorSciences = []; }
+    customColorSpaces    = rows.filter(r => r[0]==='colorspace').map(r => r[1]).filter(Boolean);
+    customColorSciences  = rows.filter(r => r[0]==='colorscience').map(r => r[1]).filter(Boolean);
+    customDeliverySpaces = rows.filter(r => r[0]==='deliveryspace').map(r => r[1]).filter(Boolean);
+  } catch(e) { customColorSpaces = []; customColorSciences = []; customDeliverySpaces = []; }
 }
 
 function buildComboSelect(selectId, baseOptions, customOptions) {
@@ -1921,16 +2227,29 @@ async function saveCustomColorScience() {
   inp.value = ''; inp.style.display = 'none';
 }
 
+async function saveCustomDeliverySpace() {
+  const inp = document.getElementById('cs-deliveryspace-custom');
+  const val = inp.value.trim();
+  if (!val) { inp.style.display = 'none'; return; }
+  if (!customDeliverySpaces.includes(val)) {
+    customDeliverySpaces.push(val);
+    try { await sheetsAppend('color_meta', [['deliveryspace', val]]); } catch(e) {}
+  }
+  buildComboSelect('cs-deliveryspace', BASE_COLOR_SPACES, customDeliverySpaces);
+  document.getElementById('cs-deliveryspace').value = val;
+  inp.value = ''; inp.style.display = 'none';
+}
+
 async function loadColor() {
   try {
     const data = await sheetsGet('color', 'A2:M1000');
     allColor = (data.values || []).map((row, i) => ({
       rowIndex: i + 2,
       date: row[0]||'', client: row[1]||'', project: row[2]||'',
-      colorSpace: row[3]||'', colorScience: row[4]||'', luts: row[5]||'',
-      software: row[6]||'', approvalStatus: row[7]||'In Progress',
-      sessionNotes: row[8]||'', clientFeedback: row[9]||'',
-      round: row[10]||'WIP', invoiceRef: row[11]||'', driveLink: row[12]||''
+      colorSpace: row[3]||'', deliveryColorSpace: row[4]||'', colorScience: row[5]||'',
+      luts: row[6]||'', software: row[7]||'', approvalStatus: row[8]||'In Progress',
+      sessionNotes: row[9]||'', clientFeedback: row[10]||'',
+      round: row[11]||'WIP', invoiceRef: row[12]||'', driveLink: row[13]||''
     })).filter(c => c.client || c.project);
     renderColor(allColor);
     populateColorClientFilter();
@@ -1941,7 +2260,7 @@ function renderColor(list) {
   const tbody = document.getElementById('color-tbody');
   document.getElementById('color-count').textContent = list.length + (list.length===1?' session':' sessions');
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">◎</div><p>No color sessions yet.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="empty-icon">◎</div><p>No color sessions yet.</p></div></td></tr>`;
     return;
   }
   const statusClass = { 'In Progress':'pill-sent', 'Awaiting Feedback':'pill-prospect', 'Approved':'pill-active', 'Delivered':'pill-completed' };
@@ -1955,6 +2274,7 @@ function renderColor(list) {
       <td class="td-muted">${esc(c.project)||'—'}</td>
       <td class="td-mono" style="text-align:center">${esc(c.round)||'—'}</td>
       <td class="td-muted">${esc(c.colorSpace)||'—'}</td>
+      <td class="td-muted">${esc(c.deliveryColorSpace)||'—'}</td>
       <td class="td-muted">${esc(c.colorScience)||'—'}</td>
       <td class="td-muted" style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.luts)}">${esc(c.luts)||'—'}</td>
       <td class="td-muted">${esc(c.software)||'—'}</td>
@@ -2033,10 +2353,12 @@ function openColorModal(rowIndex) {
 
   // Build combo selects with custom options loaded from Sheets
   buildComboSelect('cs-colorspace', BASE_COLOR_SPACES, customColorSpaces);
+  buildComboSelect('cs-deliveryspace', BASE_COLOR_SPACES, customDeliverySpaces);
   buildComboSelect('cs-colorscience', BASE_COLOR_SCIENCES, customColorSciences);
 
   // Hide custom inputs
   document.getElementById('cs-colorspace-custom').style.display = 'none';
+  document.getElementById('cs-deliveryspace-custom').style.display = 'none';
   document.getElementById('cs-colorscience-custom').style.display = 'none';
 
   if (isEdit) {
@@ -2047,6 +2369,7 @@ function openColorModal(rowIndex) {
       updateColorProjectSelect();
       document.getElementById('cs-project').value = c.project;
       document.getElementById('cs-colorspace').value = c.colorSpace;
+      document.getElementById('cs-deliveryspace').value = c.deliveryColorSpace;
       document.getElementById('cs-colorscience').value = c.colorScience;
       document.getElementById('cs-luts').value = c.luts;
       document.getElementById('cs-software').value = c.software;
@@ -2061,6 +2384,7 @@ function openColorModal(rowIndex) {
   } else {
     document.getElementById('cs-date').value = today();
     document.getElementById('cs-colorspace').value = '';
+    document.getElementById('cs-deliveryspace').value = '';
     document.getElementById('cs-colorscience').value = '';
     document.getElementById('cs-luts').value = '';
     document.getElementById('cs-software').value = 'DaVinci Resolve';
@@ -2082,6 +2406,8 @@ async function saveColorSession() {
   // Handle any pending custom entries
   const csInp = document.getElementById('cs-colorspace-custom');
   if (csInp.style.display !== 'none' && csInp.value.trim()) await saveCustomColorSpace();
+  const dsInp = document.getElementById('cs-deliveryspace-custom');
+  if (dsInp.style.display !== 'none' && dsInp.value.trim()) await saveCustomDeliverySpace();
   const sciInp = document.getElementById('cs-colorscience-custom');
   if (sciInp.style.display !== 'none' && sciInp.value.trim()) await saveCustomColorScience();
 
@@ -2090,6 +2416,7 @@ async function saveColorSession() {
     client,
     document.getElementById('cs-project').value,
     document.getElementById('cs-colorspace').value,
+    document.getElementById('cs-deliveryspace').value,
     document.getElementById('cs-colorscience').value,
     document.getElementById('cs-luts').value.trim(),
     document.getElementById('cs-software').value,
@@ -2102,7 +2429,7 @@ async function saveColorSession() {
   ];
   try {
     if (editingColor) {
-      await sheetsUpdate('color', `A${editingColor}:M${editingColor}`, [row]);
+      await sheetsUpdate('color', `A${editingColor}:N${editingColor}`, [row]);
     } else {
       await sheetsAppend('color', [row]);
     }
@@ -2115,7 +2442,7 @@ async function saveColorSession() {
 async function deleteColorSession() {
   if (!editingColor || !confirm('Delete this session?')) return;
   try {
-    await sheetsClear('color', `A${editingColor}:M${editingColor}`);
+    await sheetsClear('color', `A${editingColor}:N${editingColor}`);
     showToast('Session deleted');
     closeModal('color-modal');
     await loadColor();
