@@ -1292,6 +1292,10 @@ async function loadClientGmailThreads() {
     }
     // Fetch thread details - get full thread to reliably get subject from any message
     const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date,subject,from,date`)));
+    // DEBUG - log first thread headers to console
+    if (threads[0]?.messages?.[0]?.payload?.headers) {
+      console.log('DEBUG thread headers:', JSON.stringify(threads[0].messages[0].payload.headers));
+    }
     panel.innerHTML = threads.map(thread => {
       // Subject can be on any message in the thread — find the first one that has it
       const subject = thread.messages?.reduce((found, msg) => {
