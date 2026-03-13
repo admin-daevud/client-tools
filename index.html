@@ -873,7 +873,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 
 <!-- COLOR SESSION MODAL -->
 <div class="modal-overlay" id="color-modal" onclick="handleOverlay(event,'color-modal')">
-  <div class="modal" style="max-width:660px">
+  <div class="modal" style="max-width:660px;max-height:95vh">
     <div class="modal-header">
       <h3 id="color-modal-title">New color session</h3>
       <button class="modal-close" onclick="closeModal('color-modal')">✕</button>
@@ -976,6 +976,18 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <input type="text" id="cs-luts" placeholder="e.g. FilmLook_v3.cube, ClientCustom_Warm.cube">
         </div>
 
+        <!-- Effects Used combobox -->
+        <div class="form-group full">
+          <label>Effects Used</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="cs-effects" style="flex:1" onchange="handleComboSelect('cs-effects','cs-effects-custom')">
+              <option value="">Select or add…</option>
+              <option value="__custom__">+ Add new…</option>
+            </select>
+          </div>
+          <input type="text" id="cs-effects-custom" placeholder="Type new effect…" style="display:none;margin-top:6px" onblur="saveCustomEffect()">
+        </div>
+
         <div class="form-group"><label>Approval Status</label>
           <select id="cs-status">
             <option value="In Progress">In Progress</option>
@@ -990,14 +1002,14 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         </div>
 
         <div class="form-group full"><label>Session Notes</label>
-          <textarea id="cs-notes" placeholder="Creative decisions, grade approach, technical notes, what was tried and rejected…" style="min-height:90px"></textarea>
+          <textarea id="cs-notes" placeholder="Creative decisions, grade approach, technical notes, what was tried and rejected…" style="min-height:140px"></textarea>
         </div>
         <div class="form-group full">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
             <label style="margin-bottom:0">Client Feedback</label>
             <button class="btn btn-ghost" style="padding:3px 9px;font-size:11px" onclick="openGmailFeedbackImport()">✉ Import from Gmail</button>
           </div>
-          <textarea id="cs-feedback" placeholder="Paste client notes here — verbatim is best for the paper trail…" style="min-height:80px"></textarea>
+          <textarea id="cs-feedback" placeholder="Paste client notes here — verbatim is best for the paper trail…" style="min-height:180px"></textarea>
           <!-- Gmail import picker -->
           <div id="gmail-feedback-panel" style="display:none;margin-top:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)">
             <div style="padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center">
@@ -1036,14 +1048,14 @@ const SHEETS = {
   invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
   time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] },
   projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate'] },
-  color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
+  color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Effects','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
   color_meta: { name: 'color_meta', headers: ['Type','Value'] }
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────
 let accessToken;
 let allClients = [], allInvoices = [], allTime = [], allProjects = [], allColor = [];
-let customColorSpaces = [], customColorSciences = [], customDeliverySpaces = [];
+let customColorSpaces = [], customColorSciences = [], customDeliverySpaces = [], customEffects = [];
 let editingClient = null, editingInvoice = null, editingTime = null, editingColor = null;
 let clientSort = null, clientSortAsc = true;
 let invoiceSort = null, invoiceSortAsc = true;
@@ -1278,12 +1290,16 @@ async function loadClientGmailThreads() {
       panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No email threads found for this client.</div>`;
       return;
     }
-    // Fetch thread details
-    const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date`)));
+    // Fetch thread details - get full thread to reliably get subject from any message
+    const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date,subject,from,date`)));
     panel.innerHTML = threads.map(thread => {
+      // Subject can be on any message in the thread — find the first one that has it
+      const subject = thread.messages?.reduce((found, msg) => {
+        if (found) return found;
+        return getHeader(msg.payload?.headers, 'Subject') || '';
+      }, '') || '(no subject)';
       const msg = thread.messages?.[0];
       if (!msg) return '';
-      const subject = getHeader(msg.payload?.headers, 'Subject') || '(no subject)';
       const from    = getHeader(msg.payload?.headers, 'From');
       const date    = epochToDate(msg.internalDate);
       const count   = thread.messages.length;
@@ -1358,7 +1374,7 @@ async function searchGmailFeedback() {
       return;
     }
     const msgs = await Promise.all(data.messages.slice(0,8).map(m =>
-      gmailGet(`messages/${m.id}?format=metadata&metadataHeaders=Subject,From,Date`)
+      gmailGet(`messages/${m.id}?format=metadata&metadataHeaders=Subject,From,Date,subject,from,date`)
     ));
     results.innerHTML = msgs.map(msg => {
       const subject = getHeader(msg.payload?.headers, 'Subject') || '(no subject)';
@@ -2173,7 +2189,8 @@ async function loadColorMeta() {
     customColorSpaces    = rows.filter(r => r[0]==='colorspace').map(r => r[1]).filter(Boolean);
     customColorSciences  = rows.filter(r => r[0]==='colorscience').map(r => r[1]).filter(Boolean);
     customDeliverySpaces = rows.filter(r => r[0]==='deliveryspace').map(r => r[1]).filter(Boolean);
-  } catch(e) { customColorSpaces = []; customColorSciences = []; customDeliverySpaces = []; }
+    customEffects        = rows.filter(r => r[0]==='effect').map(r => r[1]).filter(Boolean);
+  } catch(e) { customColorSpaces = []; customColorSciences = []; customDeliverySpaces = []; customEffects = []; }
 }
 
 function buildComboSelect(selectId, baseOptions, customOptions) {
@@ -2240,6 +2257,19 @@ async function saveCustomDeliverySpace() {
   inp.value = ''; inp.style.display = 'none';
 }
 
+async function saveCustomEffect() {
+  const inp = document.getElementById('cs-effects-custom');
+  const val = inp.value.trim();
+  if (!val) { inp.style.display = 'none'; return; }
+  if (!customEffects.includes(val)) {
+    customEffects.push(val);
+    try { await sheetsAppend('color_meta', [['effect', val]]); } catch(e) {}
+  }
+  buildComboSelect('cs-effects', [], customEffects);
+  document.getElementById('cs-effects').value = val;
+  inp.value = ''; inp.style.display = 'none';
+}
+
 async function loadColor() {
   try {
     const data = await sheetsGet('color', 'A2:M1000');
@@ -2247,9 +2277,9 @@ async function loadColor() {
       rowIndex: i + 2,
       date: row[0]||'', client: row[1]||'', project: row[2]||'',
       colorSpace: row[3]||'', deliveryColorSpace: row[4]||'', colorScience: row[5]||'',
-      luts: row[6]||'', software: row[7]||'', approvalStatus: row[8]||'In Progress',
-      sessionNotes: row[9]||'', clientFeedback: row[10]||'',
-      round: row[11]||'WIP', invoiceRef: row[12]||'', driveLink: row[13]||''
+      luts: row[6]||'', effects: row[7]||'', software: row[8]||'', approvalStatus: row[9]||'In Progress',
+      sessionNotes: row[10]||'', clientFeedback: row[11]||'',
+      round: row[12]||'WIP', invoiceRef: row[13]||'', driveLink: row[14]||''
     })).filter(c => c.client || c.project);
     renderColor(allColor);
     populateColorClientFilter();
@@ -2355,11 +2385,13 @@ function openColorModal(rowIndex) {
   buildComboSelect('cs-colorspace', BASE_COLOR_SPACES, customColorSpaces);
   buildComboSelect('cs-deliveryspace', BASE_COLOR_SPACES, customDeliverySpaces);
   buildComboSelect('cs-colorscience', BASE_COLOR_SCIENCES, customColorSciences);
+  buildComboSelect('cs-effects', [], customEffects);
 
   // Hide custom inputs
   document.getElementById('cs-colorspace-custom').style.display = 'none';
   document.getElementById('cs-deliveryspace-custom').style.display = 'none';
   document.getElementById('cs-colorscience-custom').style.display = 'none';
+  document.getElementById('cs-effects-custom').style.display = 'none';
 
   if (isEdit) {
     const c = allColor.find(x => x.rowIndex === rowIndex);
@@ -2372,6 +2404,7 @@ function openColorModal(rowIndex) {
       document.getElementById('cs-deliveryspace').value = c.deliveryColorSpace;
       document.getElementById('cs-colorscience').value = c.colorScience;
       document.getElementById('cs-luts').value = c.luts;
+      document.getElementById('cs-effects').value = c.effects;
       document.getElementById('cs-software').value = c.software;
       document.getElementById('cs-round').value = c.round;
       document.getElementById('cs-status').value = c.approvalStatus;
@@ -2387,6 +2420,7 @@ function openColorModal(rowIndex) {
     document.getElementById('cs-deliveryspace').value = '';
     document.getElementById('cs-colorscience').value = '';
     document.getElementById('cs-luts').value = '';
+    document.getElementById('cs-effects').value = '';
     document.getElementById('cs-software').value = 'DaVinci Resolve';
     document.getElementById('cs-round').value = 'WIP';
     document.getElementById('cs-status').value = 'In Progress';
@@ -2411,6 +2445,9 @@ async function saveColorSession() {
   const sciInp = document.getElementById('cs-colorscience-custom');
   if (sciInp.style.display !== 'none' && sciInp.value.trim()) await saveCustomColorScience();
 
+  const efInp = document.getElementById('cs-effects-custom');
+  if (efInp.style.display !== 'none' && efInp.value.trim()) await saveCustomEffect();
+
   const row = [
     document.getElementById('cs-date').value,
     client,
@@ -2419,6 +2456,7 @@ async function saveColorSession() {
     document.getElementById('cs-deliveryspace').value,
     document.getElementById('cs-colorscience').value,
     document.getElementById('cs-luts').value.trim(),
+    document.getElementById('cs-effects').value,
     document.getElementById('cs-software').value,
     document.getElementById('cs-status').value,
     document.getElementById('cs-notes').value.trim(),
@@ -2429,7 +2467,7 @@ async function saveColorSession() {
   ];
   try {
     if (editingColor) {
-      await sheetsUpdate('color', `A${editingColor}:N${editingColor}`, [row]);
+      await sheetsUpdate('color', `A${editingColor}:O${editingColor}`, [row]);
     } else {
       await sheetsAppend('color', [row]);
     }
@@ -2442,7 +2480,7 @@ async function saveColorSession() {
 async function deleteColorSession() {
   if (!editingColor || !confirm('Delete this session?')) return;
   try {
-    await sheetsClear('color', `A${editingColor}:N${editingColor}`);
+    await sheetsClear('color', `A${editingColor}:O${editingColor}`);
     showToast('Session deleted');
     closeModal('color-modal');
     await loadColor();
