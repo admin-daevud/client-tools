@@ -1290,24 +1290,24 @@ async function loadClientGmailThreads() {
       panel.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:12px">No email threads found for this client.</div>`;
       return;
     }
-    // Fetch thread details - get full thread to reliably get subject from any message
-    const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=metadata&metadataHeaders=Subject,From,Date,subject,from,date`)));
-    // DEBUG - log first thread headers to console
-    if (threads[0]?.messages?.[0]?.payload?.headers) {
-      console.log('DEBUG thread headers:', JSON.stringify(threads[0].messages[0].payload.headers));
-    }
+    // Use full format — guarantees all headers are present on every message
+    const threads = await Promise.all(data.threads.map(t => gmailGet(`threads/${t.id}?format=full`)));
     panel.innerHTML = threads.map(thread => {
-      // Subject can be on any message in the thread — find the first one that has it
-      const subject = thread.messages?.reduce((found, msg) => {
-        if (found) return found;
-        return getHeader(msg.payload?.headers, 'Subject') || '';
-      }, '') || '(no subject)';
-      const msg = thread.messages?.[0];
-      if (!msg) return '';
-      const from    = getHeader(msg.payload?.headers, 'From');
-      const date    = epochToDate(msg.internalDate);
-      const count   = thread.messages.length;
-      const unread  = thread.messages.some(m => m.labelIds?.includes('UNREAD'));
+      const msgs = thread.messages || [];
+      if (!msgs.length) return '';
+      // Search all messages for subject — take the first non-empty one found
+      let subject = '';
+      for (const msg of msgs) {
+        const h = (msg.payload?.headers || []).find(h => h.name.toLowerCase() === 'subject');
+        if (h?.value) { subject = h.value; break; }
+      }
+      if (!subject) subject = '(no subject)';
+      const firstMsg = msgs[0];
+      const fromH = (firstMsg.payload?.headers || []).find(h => h.name.toLowerCase() === 'from');
+      const from  = fromH?.value || '';
+      const date  = epochToDate(firstMsg.internalDate);
+      const count = msgs.length;
+      const unread = msgs.some(m => (m.labelIds || []).includes('UNREAD'));
       return `<div style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''" onclick="expandThread('${thread.id}','${esc(subject)}')">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:12px;font-weight:${unread?'600':'400'};color:${unread?'var(--text)':'var(--text-muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">${esc(subject)}</span>
@@ -1378,11 +1378,12 @@ async function searchGmailFeedback() {
       return;
     }
     const msgs = await Promise.all(data.messages.slice(0,8).map(m =>
-      gmailGet(`messages/${m.id}?format=metadata&metadataHeaders=Subject,From,Date,subject,from,date`)
+      gmailGet(`messages/${m.id}?format=full`)
     ));
     results.innerHTML = msgs.map(msg => {
-      const subject = getHeader(msg.payload?.headers, 'Subject') || '(no subject)';
-      const from    = getHeader(msg.payload?.headers, 'From');
+      const headers = msg.payload?.headers || [];
+      const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || '(no subject)';
+      const from    = headers.find(h => h.name.toLowerCase() === 'from')?.value || '';
       const date    = epochToDate(msg.internalDate);
       return `<div style="padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background=''" onclick="importEmailFeedback('${msg.id}')">
         <div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(subject)}</div>
