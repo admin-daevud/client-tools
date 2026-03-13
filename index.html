@@ -480,6 +480,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <button class="nav-tab active" onclick="switchTab('clients')">Clients</button>
       <button class="nav-tab" onclick="switchTab('invoices')">Invoices</button>
       <button class="nav-tab" onclick="switchTab('time')">Time</button>
+      <button class="nav-tab" onclick="switchTab('color')">Color</button>
     </nav>
   </div>
   <div class="topbar-right">
@@ -660,9 +661,57 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
     </div>
   </div>
 
-</div>
+  <!-- ══ COLOR SESSIONS ══ -->
+  <div class="section" id="section-color">
+    <div class="section-header">
+      <h2>Color Sessions</h2>
+      <p>Session logs, LUT references, client feedback, and approval status.</p>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="color-search" placeholder="Search sessions…" oninput="filterColor()">
+        </div>
+        <select class="filter-select" id="color-client-filter" onchange="filterColor()">
+          <option value="">All clients</option>
+        </select>
+        <select class="filter-select" id="color-status-filter" onchange="filterColor()">
+          <option value="">All statuses</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Awaiting Feedback">Awaiting Feedback</option>
+          <option value="Approved">Approved</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+        <span class="count-badge" id="color-count">0 sessions</span>
+      </div>
+      <button class="btn btn-primary" onclick="openColorModal()">+ New session</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortColor('date')">Date ↕</th>
+            <th onclick="sortColor('client')">Client ↕</th>
+            <th onclick="sortColor('project')">Project ↕</th>
+            <th>Color Space</th>
+            <th>LUTs</th>
+            <th>Software</th>
+            <th>Version</th>
+            <th onclick="sortColor('approvalStatus')">Status ↕</th>
+            <th>Session Notes</th>
+            <th>Client Feedback</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="color-tbody">
+          <tr><td colspan="11" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-<!-- CLIENT MODAL -->
+</div>
 <div class="modal-overlay" id="client-modal" onclick="handleOverlay(event,'client-modal')">
   <div class="modal">
     <div class="modal-header">
@@ -800,6 +849,85 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
   </div>
 </div>
 
+<!-- COLOR SESSION MODAL -->
+<div class="modal-overlay" id="color-modal" onclick="handleOverlay(event,'color-modal')">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3 id="color-modal-title">New color session</h3>
+      <button class="modal-close" onclick="closeModal('color-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Date *</label><input type="date" id="cs-date"></div>
+        <div class="form-group"><label>Client *</label>
+          <select id="cs-client" onchange="updateColorProjectSelect()"><option value="">Select client…</option></select>
+        </div>
+        <div class="form-group"><label>Project</label>
+          <select id="cs-project"><option value="">Select project…</option></select>
+        </div>
+        <div class="form-group"><label>Revision Round</label>
+          <select id="cs-round">
+            <option value="V1">V1 — Initial grade</option>
+            <option value="V2">V2</option>
+            <option value="V3">V3</option>
+            <option value="V4">V4</option>
+            <option value="V5">V5</option>
+            <option value="Final">Final</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Color Space / Gamma</label>
+          <select id="cs-colorspace">
+            <option value="">Select…</option>
+            <option value="Rec.709">Rec.709</option>
+            <option value="Rec.2020 PQ (HDR10)">Rec.2020 PQ (HDR10)</option>
+            <option value="Rec.2020 HLG">Rec.2020 HLG</option>
+            <option value="P3-D65">P3-D65</option>
+            <option value="S-Log3 / S-Gamut3.Cine">S-Log3 / S-Gamut3.Cine</option>
+            <option value="Log C3 / AWG3">Log C3 / AWG3</option>
+            <option value="Log C4 / AWG4">Log C4 / AWG4</option>
+            <option value="BRAW / BMD Film Gen5">BRAW / BMD Film Gen5</option>
+            <option value="RED Log3G10 / REDWideGamutRGB">RED Log3G10 / REDWideGamutRGB</option>
+            <option value="Custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Software</label>
+          <select id="cs-software">
+            <option value="DaVinci Resolve">DaVinci Resolve</option>
+            <option value="Baselight">Baselight</option>
+            <option value="Nucoda">Nucoda</option>
+            <option value="Scratch">Scratch</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>LUTs Used</label>
+          <input type="text" id="cs-luts" placeholder="e.g. FilmLook_v3.cube, ClientCustom_Warm.cube">
+        </div>
+        <div class="form-group"><label>Approval Status</label>
+          <select id="cs-status">
+            <option value="In Progress">In Progress</option>
+            <option value="Awaiting Feedback">Awaiting Feedback</option>
+            <option value="Approved">Approved</option>
+            <option value="Delivered">Delivered</option>
+          </select>
+        </div>
+        <div class="form-group full"><label>Session Notes</label>
+          <textarea id="cs-notes" placeholder="Creative decisions, grade approach, technical notes, what was tried and rejected…" style="min-height:90px"></textarea>
+        </div>
+        <div class="form-group full"><label>Client Feedback</label>
+          <textarea id="cs-feedback" placeholder="Paste client notes here — verbatim is best for the paper trail…" style="min-height:80px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="color-delete-btn" style="display:none" onclick="deleteColorSession()">Delete</button>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('color-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveColorSession()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -812,16 +940,18 @@ const SHEETS = {
   clients:  { name: 'clients',  headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
   invoices: { name: 'invoices', headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
   time:     { name: 'time',     headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] },
-  projects: { name: 'projects', headers: ['Client','ProjectName','Type','Rate'] }
+  projects: { name: 'projects', headers: ['Client','ProjectName','Type','Rate'] },
+  color:    { name: 'color',    headers: ['Date','Client','Project','ColorSpace','LUTs','Software','Version','ApprovalStatus','SessionNotes','ClientFeedback','Round'] }
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────
 let accessToken;
-let allClients = [], allInvoices = [], allTime = [], allProjects = [];
-let editingClient = null, editingInvoice = null, editingTime = null;
+let allClients = [], allInvoices = [], allTime = [], allProjects = [], allColor = [];
+let editingClient = null, editingInvoice = null, editingTime = null, editingColor = null;
 let clientSort = null, clientSortAsc = true;
 let invoiceSort = null, invoiceSortAsc = true;
 let timeSort = null, timeSortAsc = true;
+let colorSort = null, colorSortAsc = true;
 let timerInterval = null, timerRunning = false, timerSeconds = 0, timerStart = null;
 let lineItemCount = 0;
 let currentTab = 'clients';
@@ -933,7 +1063,7 @@ function colLetter(n) { return String.fromCharCode(64 + n); }
 
 // ── LOAD ALL ──────────────────────────────────────────────────────────────
 async function loadAll() {
-  await Promise.all([loadClients(), loadInvoices(), loadTime(), loadProjects()]);
+  await Promise.all([loadClients(), loadInvoices(), loadTime(), loadProjects(), loadColor()]);
   populateClientDropdowns();
 }
 
@@ -1684,20 +1814,180 @@ function populateClientDropdowns() {
   });
 }
 
+// ── COLOR SESSIONS ────────────────────────────────────────────────────────
+async function loadColor() {
+  try {
+    const data = await sheetsGet('color', 'A2:K1000');
+    allColor = (data.values || []).map((row, i) => ({
+      rowIndex: i + 2,
+      date: row[0]||'', client: row[1]||'', project: row[2]||'',
+      colorSpace: row[3]||'', luts: row[4]||'', software: row[5]||'',
+      version: row[6]||'', approvalStatus: row[7]||'In Progress',
+      sessionNotes: row[8]||'', clientFeedback: row[9]||'', round: row[10]||'V1'
+    })).filter(c => c.client || c.project);
+    renderColor(allColor);
+    populateColorClientFilter();
+  } catch(e) { showToast('Failed to load color sessions', 'error'); renderColor([]); }
+}
+
+function renderColor(list) {
+  const tbody = document.getElementById('color-tbody');
+  document.getElementById('color-count').textContent = list.length + (list.length===1?' session':' sessions');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">◎</div><p>No color sessions yet.</p></div></td></tr>`;
+    return;
+  }
+  const statusClass = { 'In Progress':'pill-sent', 'Awaiting Feedback':'pill-prospect', 'Approved':'pill-active', 'Delivered':'pill-completed' };
+  tbody.innerHTML = list.map(c => `
+    <tr onclick="openColorModal(${c.rowIndex})">
+      <td class="td-mono">${esc(c.date)||'—'}</td>
+      <td class="td-name">${esc(c.client)}</td>
+      <td class="td-muted">${esc(c.project)||'—'}</td>
+      <td class="td-muted">${esc(c.colorSpace)||'—'}</td>
+      <td class="td-muted" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.luts)}">${esc(c.luts)||'—'}</td>
+      <td class="td-muted">${esc(c.software)||'—'}</td>
+      <td class="td-mono" style="text-align:center">${esc(c.round)||'—'}</td>
+      <td><span class="pill ${statusClass[c.approvalStatus]||'pill-draft'}">${esc(c.approvalStatus)}</span></td>
+      <td class="td-muted" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.sessionNotes)}">${esc(c.sessionNotes)||'—'}</td>
+      <td class="td-muted" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(c.clientFeedback)}">${esc(c.clientFeedback)||'—'}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openColorModal(${c.rowIndex})">Edit</button></td>
+    </tr>`).join('');
+}
+
+function filterColor() {
+  const q2 = document.getElementById('color-search').value.toLowerCase();
+  const cf = document.getElementById('color-client-filter').value;
+  const sf = document.getElementById('color-status-filter').value;
+  let list = allColor.filter(c => {
+    const mq = !q2 || [c.client,c.project,c.luts,c.colorSpace,c.software,c.sessionNotes,c.clientFeedback,c.round].some(v=>v.toLowerCase().includes(q2));
+    const mc = !cf || c.client === cf;
+    const ms = !sf || c.approvalStatus === sf;
+    return mq && mc && ms;
+  });
+  if (colorSort) list = list.sort((a,b) => {
+    const va = (a[colorSort]||'').toLowerCase(), vb = (b[colorSort]||'').toLowerCase();
+    return colorSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  renderColor(list);
+}
+
+function sortColor(f) { if (colorSort===f) colorSortAsc=!colorSortAsc; else { colorSort=f; colorSortAsc=true; } filterColor(); }
+
+function populateColorClientFilter() {
+  const sel = document.getElementById('color-client-filter');
+  const cur = sel.value;
+  const names = [...new Set(allColor.map(c => c.client).filter(Boolean))].sort();
+  sel.innerHTML = `<option value="">All clients</option>`;
+  names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  if (cur) sel.value = cur;
+}
+
+function updateColorProjectSelect() {
+  const client = document.getElementById('cs-client').value;
+  const sel = document.getElementById('cs-project');
+  const projects = getProjectsForClient(client);
+  sel.innerHTML = `<option value="">Select project…</option>`;
+  projects.forEach(p => { const o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o); });
+}
+
+function openColorModal(rowIndex) {
+  editingColor = rowIndex || null;
+  const isEdit = !!rowIndex;
+  document.getElementById('color-modal-title').textContent = isEdit ? 'Edit color session' : 'New color session';
+  document.getElementById('color-delete-btn').style.display = isEdit ? '' : 'none';
+
+  // Populate client dropdown
+  const sel = document.getElementById('cs-client');
+  sel.innerHTML = `<option value="">Select client…</option>`;
+  allClients.slice().sort((a,b)=>(a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.name; o.textContent = c.company ? c.company : c.name;
+    sel.appendChild(o);
+  });
+
+  if (isEdit) {
+    const c = allColor.find(x => x.rowIndex === rowIndex);
+    if (c) {
+      document.getElementById('cs-date').value = c.date;
+      sel.value = c.client;
+      updateColorProjectSelect();
+      document.getElementById('cs-project').value = c.project;
+      document.getElementById('cs-colorspace').value = c.colorSpace;
+      document.getElementById('cs-luts').value = c.luts;
+      document.getElementById('cs-software').value = c.software;
+      document.getElementById('cs-round').value = c.round;
+      document.getElementById('cs-status').value = c.approvalStatus;
+      document.getElementById('cs-notes').value = c.sessionNotes;
+      document.getElementById('cs-feedback').value = c.clientFeedback;
+    }
+  } else {
+    document.getElementById('cs-date').value = today();
+    document.getElementById('cs-colorspace').value = '';
+    document.getElementById('cs-luts').value = '';
+    document.getElementById('cs-software').value = 'DaVinci Resolve';
+    document.getElementById('cs-round').value = 'V1';
+    document.getElementById('cs-status').value = 'In Progress';
+    document.getElementById('cs-notes').value = '';
+    document.getElementById('cs-feedback').value = '';
+    updateColorProjectSelect();
+  }
+  openModal('color-modal');
+}
+
+async function saveColorSession() {
+  const client = document.getElementById('cs-client').value;
+  if (!client) { showToast('Client is required', 'error'); return; }
+  const row = [
+    document.getElementById('cs-date').value,
+    client,
+    document.getElementById('cs-project').value,
+    document.getElementById('cs-colorspace').value,
+    document.getElementById('cs-luts').value.trim(),
+    document.getElementById('cs-software').value,
+    '', // version col reserved
+    document.getElementById('cs-status').value,
+    document.getElementById('cs-notes').value.trim(),
+    document.getElementById('cs-feedback').value.trim(),
+    document.getElementById('cs-round').value
+  ];
+  try {
+    if (editingColor) {
+      await sheetsUpdate('color', `A${editingColor}:K${editingColor}`, [row]);
+    } else {
+      await sheetsAppend('color', [row]);
+    }
+    showToast('Session saved ✓', 'success');
+    closeModal('color-modal');
+    await loadColor();
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function deleteColorSession() {
+  if (!editingColor || !confirm('Delete this session?')) return;
+  try {
+    await sheetsClear('color', `A${editingColor}:K${editingColor}`);
+    showToast('Session deleted');
+    closeModal('color-modal');
+    await loadColor();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
 // ── TABS ─────────────────────────────────────────────────────────────────
 function switchTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById(`section-${tab}`).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach(t => { if (t.textContent.toLowerCase().startsWith(tab)) t.classList.add('active'); });
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
+  });
 }
 
 // ── MODAL HELPERS ─────────────────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { ['client-modal','invoice-modal','time-modal'].forEach(closeModal); }});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { ['client-modal','invoice-modal','time-modal','color-modal'].forEach(closeModal); }});
 
 // ── UTILS ─────────────────────────────────────────────────────────────────
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
