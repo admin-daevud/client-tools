@@ -741,6 +741,16 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <option value="Flat">Flat fee</option>
         </select>
         <input type="number" id="timer-rate" placeholder="Rate ($)" style="max-width:100px">
+        <select id="timer-version" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 10px;color:var(--text);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;font-size:12px;outline:none;max-width:90px">
+          <option value="">Version…</option>
+          <option value="WIP">WIP</option>
+          <option value="V1">V1</option>
+          <option value="V2">V2</option>
+          <option value="V3">V3</option>
+          <option value="V4">V4</option>
+          <option value="V5">V5</option>
+          <option value="Final">Final</option>
+        </select>
       </div>
       <button class="btn btn-accent" onclick="logTimerEntry()">Log entry</button>
     </div>
@@ -770,12 +780,13 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             <th onclick="sortTime('duration')">Duration ↕</th>
             <th onclick="sortTime('rate')">Rate ↕</th>
             <th onclick="sortTime('amount')">Amount ↕</th>
+            <th>Version</th>
             <th>Notes</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="time-tbody">
-          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1019,6 +1030,18 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         </div>
         <div class="form-group"><label>Duration (hrs)</label><input type="number" id="t-duration" step="0.25" placeholder="8.0"></div>
         <div class="form-group"><label>Rate ($)</label><input type="number" id="t-rate" placeholder="150"></div>
+        <div class="form-group"><label>Version</label>
+          <select id="t-version">
+            <option value="">— None —</option>
+            <option value="WIP">WIP</option>
+            <option value="V1">V1</option>
+            <option value="V2">V2</option>
+            <option value="V3">V3</option>
+            <option value="V4">V4</option>
+            <option value="V5">V5</option>
+            <option value="Final">Final</option>
+          </select>
+        </div>
         <div class="form-group full"><label>Notes</label><textarea id="t-notes" placeholder="What you worked on…"></textarea></div>
       </div>
     </div>
@@ -1244,6 +1267,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
     <div class="modal-footer">
       <button class="btn btn-danger" id="color-delete-btn" style="display:none" onclick="deleteColorSession()">Delete</button>
       <div class="modal-footer-right">
+        <button class="btn btn-ghost" id="color-duplicate-btn" style="display:none" onclick="duplicateColorSession()">⧉ Duplicate</button>
         <button class="btn btn-ghost" onclick="closeModal('color-modal')">Cancel</button>
         <button class="btn btn-primary" onclick="saveColorSession()">Save</button>
       </div>
@@ -1262,7 +1286,7 @@ const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.goog
 const SHEETS = {
   clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
   invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
-  time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] },
+  time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes','Version'] },
   projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate','Status','StartDate','Notes','DriveLink'] },
   color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Effects','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
   color_meta: { name: 'color_meta', headers: ['Type','Value'] }
@@ -2035,12 +2059,12 @@ async function deleteInvoice() {
 // ── TIME TRACKING ─────────────────────────────────────────────────────────
 async function loadTime() {
   try {
-    const data = await sheetsGet('time', 'A2:H1000');
+    const data = await sheetsGet('time', 'A2:I1000');
     allTime = (data.values || []).map((row, i) => ({
       rowIndex: i + 2,
       date: row[0]||'', client: row[1]||'', project: row[2]||'',
       type: row[3]||'Hourly', duration: parseFloat(row[4])||0,
-      rate: parseFloat(row[5])||0, amount: parseFloat(row[6])||0, notes: row[7]||''
+      rate: parseFloat(row[5])||0, amount: parseFloat(row[6])||0, notes: row[7]||'', version: row[8]||''
     })).filter(t => t.date || t.client);
     renderTime(allTime);
     renderTimeStats();
@@ -2064,7 +2088,7 @@ function renderTimeStats() {
 function renderTime(list) {
   const tbody = document.getElementById('time-tbody');
   document.getElementById('time-count').textContent = list.length + (list.length===1?' entry':' entries');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">◎</div><p>No time entries yet.</p></div></td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">◎</div><p>No time entries yet.</p></div></td></tr>`; return; }
   tbody.innerHTML = list.map(t => `
     <tr onclick="openTimeModal(${t.rowIndex})">
       <td class="td-mono">${t.date||'—'}</td>
@@ -2074,6 +2098,7 @@ function renderTime(list) {
       <td class="td-mono">${t.duration} ${t.type==='Daily'?'day'+(t.duration!==1?'s':''):'hr'+(t.duration!==1?'s':'')}</td>
       <td class="td-mono">${fmt(t.rate)}</td>
       <td class="td-amount">${fmt(t.amount)}</td>
+      <td class="td-mono" style="text-align:center">${t.version ? `<span class="pill pill-draft">${esc(t.version)}</span>` : '—'}</td>
       <td class="td-muted" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.notes)}</td>
       <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openTimeModal(${t.rowIndex})">Edit</button></td>
     </tr>
@@ -2144,6 +2169,7 @@ function logTimerEntry() {
   document.getElementById('t-duration').value = hrs;
   document.getElementById('t-rate').value = document.getElementById('timer-rate').value;
   document.getElementById('t-notes').value = '';
+  document.getElementById('t-version').value = document.getElementById('timer-version').value;
   editingTime = null;
   document.getElementById('time-modal-title').textContent = 'Log time entry';
   document.getElementById('time-delete-btn').style.display = 'none';
@@ -2166,12 +2192,14 @@ function openTimeModal(rowIndex) {
       document.getElementById('t-duration').value = t.duration;
       document.getElementById('t-rate').value = t.rate;
       document.getElementById('t-notes').value = t.notes;
+      document.getElementById('t-version').value = t.version || '';
     }
   } else {
     document.getElementById('t-date').value = today();
     ['t-duration','t-rate','t-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('t-client').value = '';
     document.getElementById('t-type').value = 'Hourly';
+    document.getElementById('t-version').value = '';
     updateProjectSelect('t-project', '');
   }
   openModal('time-modal');
@@ -2195,10 +2223,11 @@ async function saveTimeEntry() {
     projectVal,
     document.getElementById('t-type').value,
     duration, rate, amount,
-    document.getElementById('t-notes').value.trim()
+    document.getElementById('t-notes').value.trim(),
+    document.getElementById('t-version').value
   ];
   try {
-    if (editingTime) await sheetsUpdate('time', `A${editingTime}:H${editingTime}`, [row]);
+    if (editingTime) await sheetsUpdate('time', `A${editingTime}:I${editingTime}`, [row]);
     else await sheetsAppend('time', [row]);
     showToast('Entry saved ✓', 'success');
     closeModal('time-modal');
@@ -2210,7 +2239,7 @@ async function saveTimeEntry() {
 async function deleteTimeEntry() {
   if (!editingTime || !confirm('Delete this entry?')) return;
   try {
-    await sheetsClear('time', `A${editingTime}:H${editingTime}`);
+    await sheetsClear('time', `A${editingTime}:I${editingTime}`);
     showToast('Entry deleted');
     closeModal('time-modal');
     await loadTime();
@@ -2755,6 +2784,7 @@ function openColorModal(rowIndex) {
   const isEdit = !!rowIndex;
   document.getElementById('color-modal-title').textContent = isEdit ? 'Edit color session' : 'New color session';
   document.getElementById('color-delete-btn').style.display = isEdit ? '' : 'none';
+  document.getElementById('color-duplicate-btn').style.display = isEdit ? '' : 'none';
 
   // Populate client dropdown
   const sel = document.getElementById('cs-client');
@@ -2859,6 +2889,70 @@ async function saveColorSession() {
     closeModal('color-modal');
     await loadColor();
   } catch(e) { showToast('Save failed', 'error'); }
+}
+
+const ROUND_ORDER = ['WIP', 'V1', 'V2', 'V3', 'V4', 'V5', 'Final'];
+
+function nextRound(current) {
+  const idx = ROUND_ORDER.indexOf(current);
+  if (idx === -1 || idx >= ROUND_ORDER.length - 1) return current; // stay at Final
+  return ROUND_ORDER[idx + 1];
+}
+
+async function duplicateColorSession() {
+  if (!editingColor) return;
+  const original = allColor.find(x => x.rowIndex === editingColor);
+  if (!original) return;
+
+  // 1. Save current modal state first (in case user made edits before hitting duplicate)
+  await saveColorSession();
+
+  // Re-fetch original after save in case rowIndex changed
+  const saved = allColor.find(x => x.rowIndex === editingColor) || original;
+
+  // 2. Mark original as Versioned Up
+  try {
+    await sheetsUpdate('color', `A${saved.rowIndex}:O${saved.rowIndex}`, [[
+      saved.date, saved.client, saved.project,
+      saved.colorSpace, saved.deliveryColorSpace, saved.colorScience,
+      saved.luts, saved.effects, saved.software,
+      'Versioned Up',
+      saved.sessionNotes, saved.clientFeedback,
+      saved.round, saved.invoiceRef, saved.driveLink
+    ]]);
+  } catch(e) { showToast('Could not version original session', 'error'); return; }
+
+  // 3. Build new session row
+  const newRound = nextRound(saved.round);
+  const noteHeader = `[Carried from ${saved.round} — ${saved.date}]\n`;
+  const newNotes = saved.sessionNotes ? noteHeader + saved.sessionNotes : '';
+
+  const newRow = [
+    today(),               // fresh date
+    saved.client,
+    saved.project,
+    saved.colorSpace,
+    saved.deliveryColorSpace,
+    saved.colorScience,
+    saved.luts,
+    saved.effects,
+    saved.software,
+    'In Progress',         // reset status
+    newNotes,              // carried notes with header
+    '',                    // clear client feedback
+    newRound,              // incremented round
+    saved.invoiceRef,
+    saved.driveLink
+  ];
+
+  try {
+    await sheetsAppend('color', [newRow]);
+    showToast(`Duplicated as ${newRound} ✓`, 'success');
+    await loadColor();
+    // Open the newly created session
+    const newest = allColor[allColor.length - 1];
+    if (newest) openColorModal(newest.rowIndex);
+  } catch(e) { showToast('Duplicate failed', 'error'); }
 }
 
 async function deleteColorSession() {
