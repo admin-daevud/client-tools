@@ -847,6 +847,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <select class="filter-select" id="color-status-filter" onchange="filterColor()">
           <option value="">All statuses</option>
           <option value="In Progress">In Progress</option>
+          <option value="Versioned Up">Versioned Up</option>
           <option value="Awaiting Feedback">Awaiting Feedback</option>
           <option value="Approved">Approved</option>
           <option value="Delivered">Delivered</option>
@@ -1205,6 +1206,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <div class="form-group"><label>Approval Status</label>
           <select id="cs-status">
             <option value="In Progress">In Progress</option>
+            <option value="Versioned Up">Versioned Up</option>
             <option value="Awaiting Feedback">Awaiting Feedback</option>
             <option value="Approved">Approved</option>
             <option value="Delivered">Delivered</option>
@@ -1671,9 +1673,7 @@ function renderClients(list) {
     }
     const clientProjects = getProjectsForClient(c.name);
     const projHTML = clientProjects.length
-      ? `<select onclick="event.stopPropagation()" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:11px;color:var(--text-muted);font-family:Helvetica Neue,Helvetica,Arial,sans-serif;outline:none;max-width:160px">
-          ${clientProjects.map(p => `<option>${esc(p)}</option>`).join('')}
-         </select>`
+      ? clientProjects.map(p => `<span onclick="event.stopPropagation();switchTab('projects');setTimeout(()=>{document.getElementById('project-search').value='${esc(p)}';filterProjects();},50)" style="display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:10px;color:var(--text-muted);cursor:pointer;margin:1px 2px;white-space:nowrap;transition:all 0.15s" onmouseover="this.style.background='var(--surface)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--text-muted)'">${esc(p)}</span>`).join('')
       : '<span style="color:var(--text-dim)">—</span>';
     return `<tr onclick="openClientModal(${c.rowIndex})">
       <td class="td-name">${esc(c.name)}</td>
@@ -2677,7 +2677,7 @@ function renderColor(list) {
     tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state"><div class="empty-icon">◎</div><p>No color sessions yet.</p></div></td></tr>`;
     return;
   }
-  const statusClass = { 'In Progress':'pill-sent', 'Awaiting Feedback':'pill-prospect', 'Approved':'pill-active', 'Delivered':'pill-completed' };
+  const statusClass = { 'In Progress':'pill-sent', 'Versioned Up':'pill-prospect', 'Awaiting Feedback':'pill-prospect', 'Approved':'pill-active', 'Delivered':'pill-completed' };
   tbody.innerHTML = list.map(c => {
     const driveLinkHTML = c.driveLink
       ? `<a href="${esc(c.driveLink)}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);text-decoration:none;font-size:11px" title="${esc(c.driveLink)}">↗ Drive</a>`
@@ -2970,13 +2970,13 @@ function renderDashboard() {
 
   // ── COLOR SESSIONS AWAITING FEEDBACK ──
   const awaitingSessions = allColor
-    .filter(c => c.approvalStatus === 'Awaiting Feedback' || c.approvalStatus === 'In Progress')
+    .filter(c => c.approvalStatus === 'Awaiting Feedback' || c.approvalStatus === 'In Progress' || c.approvalStatus === 'Versioned Up')
     .sort((a,b) => (b.date||'').localeCompare(a.date||''))
     .slice(0, 6);
   document.getElementById('dash-color-total').textContent = awaitingSessions.length ? `${awaitingSessions.length} active` : '';
   document.getElementById('dash-color').innerHTML = awaitingSessions.length
     ? awaitingSessions.map(c => {
-        const statusColor = c.approvalStatus === 'Awaiting Feedback' ? 'var(--yellow)' : 'var(--blue)';
+        const statusColor = c.approvalStatus === 'Awaiting Feedback' ? 'var(--yellow)' : c.approvalStatus === 'Versioned Up' ? 'var(--accent2)' : 'var(--blue)';
         return `<div class="dash-row" onclick="switchTab('color')">
           <div class="dash-row-left">
             <div class="dash-row-name">${esc(c.client)}${c.project?` — ${esc(c.project)}`:''}</div>
