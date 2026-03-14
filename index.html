@@ -549,6 +549,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <button class="nav-tab" onclick="switchTab('clients')">Clients</button>
       <button class="nav-tab" onclick="switchTab('invoices')">Invoices <span id="invoice-overdue-badge" style="display:none;background:var(--red);color:#fff;border-radius:20px;font-size:9px;padding:1px 6px;margin-left:3px;font-weight:600"></span></button>
       <button class="nav-tab" onclick="switchTab('time')">Time</button>
+      <button class="nav-tab" onclick="switchTab('projects')">Projects</button>
       <button class="nav-tab" onclick="switchTab('color')">Color</button>
     </nav>
   </div>
@@ -779,18 +780,52 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       </table>
     </div>
 
-    <!-- Projects Manager -->
-    <div style="margin-top:28px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <h3 style="font-family:'Instrument Serif',serif;font-size:16px;font-weight:400;color:var(--text)">Projects</h3>
-        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="renderProjectManager()">↻ Refresh</button>
+  </div>
+
+  <!-- ══ PROJECTS ══ -->
+  <div class="section" id="section-projects">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="project-search" placeholder="Search projects…" oninput="filterProjects()">
+        </div>
+        <select class="filter-select" id="project-client-filter" onchange="filterProjects()">
+          <option value="">All clients</option>
+        </select>
+        <select class="filter-select" id="project-status-filter" onchange="filterProjects()">
+          <option value="">All statuses</option>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
+          <option value="On Hold">On Hold</option>
+          <option value="Archived">Archived</option>
+        </select>
+        <span class="count-badge" id="project-count">0 projects</span>
       </div>
-      <div id="project-manager" class="table-wrap">
-        <table>
-          <thead><tr><th>Client</th><th>Project</th><th></th></tr></thead>
-          <tbody id="projects-tbody"><tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">Loading…</td></tr></tbody>
-        </table>
-      </div>
+      <button class="btn btn-primary" onclick="openProjectModal()">+ New project</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortProjects('client')">Client ↕</th>
+            <th onclick="sortProjects('name')">Project ↕</th>
+            <th onclick="sortProjects('status')">Status ↕</th>
+            <th>Type</th>
+            <th>Rate</th>
+            <th onclick="sortProjects('startDate')">Start ↕</th>
+            <th onclick="sortProjects('totalHours')">Hours ↕</th>
+            <th onclick="sortProjects('totalInvoiced')">Invoiced ↕</th>
+            <th onclick="sortProjects('colorRounds')">Color Rounds ↕</th>
+            <th onclick="sortProjects('lastActivity')">Last Activity ↕</th>
+            <th>Color Sessions</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="projects-tbody">
+          <tr><td colspan="12" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -996,6 +1031,60 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
   </div>
 </div>
 
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="project-modal" onclick="handleOverlay(event,'project-modal')">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 id="project-modal-title">New project</h3>
+      <button class="modal-close" onclick="closeModal('project-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>Client *</label>
+          <select id="p-client"><option value="">Select client…</option></select>
+        </div>
+        <div class="form-group"><label>Project Name *</label>
+          <input type="text" id="p-name" placeholder="e.g. Core Gym Campaign">
+        </div>
+        <div class="form-group"><label>Type</label>
+          <select id="p-type">
+            <option value="Hourly">Hourly</option>
+            <option value="Daily">Daily</option>
+            <option value="Flat">Flat fee</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Rate ($)</label>
+          <input type="text" id="p-rate" placeholder="e.g. 800/day or 5000 flat">
+        </div>
+        <div class="form-group"><label>Status</label>
+          <select id="p-status">
+            <option value="Active">Active</option>
+            <option value="Completed">Completed</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Archived">Archived</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Start Date</label>
+          <input type="date" id="p-startdate">
+        </div>
+        <div class="form-group full"><label>Google Drive Link</label>
+          <input type="url" id="p-drivelink" placeholder="Contract, brief, delivery specs…">
+        </div>
+        <div class="form-group full"><label>Notes</label>
+          <textarea id="p-notes" placeholder="Project details, deliverables, special requirements…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="project-delete-btn" style="display:none" onclick="deleteProject()">Delete</button>
+      <div class="modal-footer-right">
+        <button class="btn btn-ghost" onclick="closeModal('project-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- COLOR SESSION MODAL -->
 <div class="modal-overlay" id="color-modal" onclick="handleOverlay(event,'color-modal')">
   <div class="modal" style="max-width:660px;max-height:95vh">
@@ -1172,7 +1261,7 @@ const SHEETS = {
   clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
   invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
   time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes'] },
-  projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate'] },
+  projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate','Status','StartDate','Notes','DriveLink'] },
   color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Effects','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
   color_meta: { name: 'color_meta', headers: ['Type','Value'] }
 };
@@ -1181,11 +1270,12 @@ const SHEETS = {
 let accessToken;
 let allClients = [], allInvoices = [], allTime = [], allProjects = [], allColor = [];
 let customColorSpaces = [], customColorSciences = [], customDeliverySpaces = [], customEffects = [];
-let editingClient = null, editingInvoice = null, editingTime = null, editingColor = null;
+let editingClient = null, editingInvoice = null, editingTime = null, editingColor = null, editingProject = null;
 let clientSort = null, clientSortAsc = true;
 let invoiceSort = null, invoiceSortAsc = true;
 let timeSort = null, timeSortAsc = true;
 let colorSort = null, colorSortAsc = true;
+let projectSort = null, projectSortAsc = true;
 let timerInterval = null, timerRunning = false, timerSeconds = 0, timerStart = null;
 let lineItemCount = 0;
 let currentTab = 'home';
@@ -1546,6 +1636,8 @@ async function loadAll() {
   populateClientDropdowns();
   checkUnreadFollowUps();
   renderDashboard();
+  renderProjects(buildProjectList());
+  populateProjectFilters();
 }
 
 // ── CLIENTS ───────────────────────────────────────────────────────────────
@@ -1952,7 +2044,6 @@ async function loadTime() {
     })).filter(t => t.date || t.client);
     renderTime(allTime);
     renderTimeStats();
-    renderProjectManager();
   } catch(e) { showToast('Failed to load time', 'error'); renderTime([]); }
 }
 
@@ -2129,42 +2220,218 @@ async function deleteTimeEntry() {
 // ── PROJECTS ──────────────────────────────────────────────────────────────
 async function loadProjects() {
   try {
-    const data = await sheetsGet('projects', 'A2:D1000');
-    allProjects = (data.values || []).map(row => ({
-      client: row[0]||'', name: row[1]||'', type: row[2]||'', rate: row[3]||''
+    const data = await sheetsGet('projects', 'A2:H1000');
+    allProjects = (data.values || []).map((row, i) => ({
+      rowIndex: i + 2,
+      client: row[0]||'', name: row[1]||'', type: row[2]||'',
+      rate: row[3]||'', status: row[4]||'Active', startDate: row[5]||'',
+      notes: row[6]||'', driveLink: row[7]||''
     })).filter(p => p.client && p.name);
   } catch(e) { allProjects = []; }
-  renderProjectManager();
+  renderProjects(buildProjectList());
+  populateProjectFilters();
 }
 
-function renderProjectManager() {
-  const tbody = document.getElementById('projects-tbody');
-  if (!tbody) return;
-  // Merge manual projects and time-entry-learned projects
-  const allKnown = [];
-  const seen = new Set();
+function buildProjectList() {
+  // Merge sheet projects + time-learned projects, calculate aggregates
+  const map = new Map();
+
+  // Seed with sheet projects
   allProjects.forEach(p => {
     const key = p.client + '|||' + p.name;
-    if (!seen.has(key)) { seen.add(key); allKnown.push({ client: p.client, name: p.name, inSheet: true }); }
+    map.set(key, { ...p, inSheet: true, totalHours: 0, totalInvoiced: 0, colorRounds: 0, lastActivity: '' });
   });
+
+  // Add time-learned projects not yet in sheet
   allTime.forEach(t => {
     if (!t.client || !t.project) return;
     const key = t.client + '|||' + t.project;
-    if (!seen.has(key)) { seen.add(key); allKnown.push({ client: t.client, name: t.project, inSheet: false }); }
+    if (!map.has(key)) map.set(key, { client: t.client, name: t.project, type: '', rate: '', status: 'Active', startDate: '', notes: '', driveLink: '', inSheet: false, rowIndex: null, totalHours: 0, totalInvoiced: 0, colorRounds: 0, lastActivity: '' });
   });
-  allKnown.sort((a,b) => a.client.localeCompare(b.client) || a.name.localeCompare(b.name));
-  if (!allKnown.length) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:30px;color:var(--text-muted)">No projects yet. They appear automatically when you log time.</td></tr>`;
+
+  // Aggregate hours from time entries
+  allTime.forEach(t => {
+    const key = t.client + '|||' + t.project;
+    if (!map.has(key) || !t.project) return;
+    const p = map.get(key);
+    p.totalHours += parseFloat(t.duration) || 0;
+    if (t.date && (!p.lastActivity || t.date > p.lastActivity)) p.lastActivity = t.date;
+  });
+
+  // Aggregate invoiced amounts
+  allInvoices.forEach(inv => {
+    if (!inv.project) return;
+    const key = inv.client + '|||' + inv.project;
+    if (!map.has(key)) return;
+    map.get(key).totalInvoiced += parseFloat(inv.amount) || 0;
+  });
+
+  // Count color rounds and track last activity
+  allColor.forEach(c => {
+    if (!c.project) return;
+    const key = c.client + '|||' + c.project;
+    if (!map.has(key)) return;
+    const p = map.get(key);
+    p.colorRounds++;
+    if (c.date && (!p.lastActivity || c.date > p.lastActivity)) p.lastActivity = c.date;
+  });
+
+  return [...map.values()];
+}
+
+function renderProjects(list) {
+  const tbody = document.getElementById('projects-tbody');
+  if (!tbody) return;
+  document.getElementById('project-count').textContent = list.length + (list.length===1?' project':' projects');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">◎</div><p>No projects yet.</p></div></td></tr>`;
     return;
   }
-  tbody.innerHTML = allKnown.map(p => `
-    <tr>
-      <td class="td-muted">${esc(p.client)}</td>
-      <td class="td-name">${esc(p.name)}${!p.inSheet ? ' <span style="font-size:10px;color:var(--text-dim)">(from time log)</span>' : ''}</td>
-      <td style="text-align:right">${p.inSheet ? `<button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteProject('${esc(p.client)}','${esc(p.name)}')">Delete</button>` : '<span style="font-size:10px;color:var(--text-dim)">delete entry to remove</span>'}</td>
-    </tr>
-  `).join('');
+  const statusClass = { 'Active':'pill-active', 'Completed':'pill-completed', 'On Hold':'pill-prospect', 'Archived':'pill-draft' };
+  tbody.innerHTML = list.map(p => {
+    // Color sessions for this project
+    const sessions = allColor.filter(c => c.client === p.client && c.project === p.name);
+    const sessionHTML = sessions.length
+      ? sessions.map(c => {
+          const sc = { 'In Progress':'var(--blue)', 'Awaiting Feedback':'var(--yellow)', 'Approved':'var(--green)', 'Delivered':'var(--text-muted)' }[c.approvalStatus] || 'var(--text-muted)';
+          return `<span onclick="event.stopPropagation();openColorModal(${c.rowIndex})" style="cursor:pointer;display:inline-block;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 7px;font-size:10px;margin:1px 2px;color:${sc}" title="${esc(c.approvalStatus)}">${esc(c.round)}</span>`;
+        }).join('')
+      : '<span style="color:var(--text-dim);font-size:11px">—</span>';
+
+    const driveLinkHTML = p.driveLink
+      ? `<a href="${esc(p.driveLink)}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);font-size:11px;text-decoration:none">↗</a>`
+      : '';
+
+    return `<tr onclick="${p.inSheet ? `openProjectModal(${p.rowIndex})` : `openProjectModal(null,'${esc(p.client)}','${esc(p.name)}')`}">
+      <td class="td-name">${esc(p.client)}</td>
+      <td class="td-name">${esc(p.name)}${!p.inSheet?` <span style="font-size:9px;color:var(--text-dim)">(auto)</span>`:''} ${driveLinkHTML}</td>
+      <td><span class="pill ${statusClass[p.status]||'pill-draft'}">${esc(p.status||'Active')}</span></td>
+      <td class="td-muted">${esc(p.type)||'—'}</td>
+      <td class="td-muted">${esc(p.rate)||'—'}</td>
+      <td class="td-mono">${p.startDate||'—'}</td>
+      <td class="td-mono" style="text-align:right">${p.totalHours > 0 ? p.totalHours.toFixed(1)+'h' : '—'}</td>
+      <td class="td-amount">${p.totalInvoiced > 0 ? fmt(p.totalInvoiced) : '—'}</td>
+      <td class="td-mono" style="text-align:center">${p.colorRounds > 0 ? p.colorRounds : '—'}</td>
+      <td class="td-muted">${p.lastActivity||'—'}</td>
+      <td style="max-width:160px">${sessionHTML}</td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();${p.inSheet ? `openProjectModal(${p.rowIndex})` : `openProjectModal(null,'${esc(p.client)}','${esc(p.name)}')`}">Edit</button></td>
+    </tr>`;
+  }).join('');
 }
+
+function filterProjects() {
+  const q2 = document.getElementById('project-search').value.toLowerCase();
+  const cf = document.getElementById('project-client-filter').value;
+  const sf = document.getElementById('project-status-filter').value;
+  let list = buildProjectList().filter(p => {
+    const mq = !q2 || [p.client, p.name, p.type, p.notes].some(v => (v||'').toLowerCase().includes(q2));
+    const mc = !cf || p.client === cf;
+    const ms = !sf || (p.status||'Active') === sf;
+    return mq && mc && ms;
+  });
+  if (projectSort) {
+    list = list.sort((a, b) => {
+      let va = a[projectSort], vb = b[projectSort];
+      if (typeof va === 'number') return projectSortAsc ? va - vb : vb - va;
+      return projectSortAsc ? String(va||'').localeCompare(String(vb||'')) : String(vb||'').localeCompare(String(va||''));
+    });
+  }
+  renderProjects(list);
+}
+
+function sortProjects(f) { if (projectSort===f) projectSortAsc=!projectSortAsc; else { projectSort=f; projectSortAsc=true; } filterProjects(); }
+
+function populateProjectFilters() {
+  const sel = document.getElementById('project-client-filter');
+  if (!sel) return;
+  const cur = sel.value;
+  const names = [...new Set(buildProjectList().map(p => p.client).filter(Boolean))].sort();
+  sel.innerHTML = `<option value="">All clients</option>`;
+  names.forEach(n => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
+  if (cur) sel.value = cur;
+}
+
+function openProjectModal(rowIndex, prefillClient, prefillName) {
+  editingProject = rowIndex || null;
+  const isEdit = !!rowIndex;
+  document.getElementById('project-modal-title').textContent = isEdit ? 'Edit project' : 'New project';
+  document.getElementById('project-delete-btn').style.display = isEdit ? '' : 'none';
+
+  // Populate client dropdown
+  const sel = document.getElementById('p-client');
+  sel.innerHTML = `<option value="">Select client…</option>`;
+  allClients.slice().sort((a,b)=>(a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.name; o.textContent = c.company ? c.company : c.name;
+    sel.appendChild(o);
+  });
+
+  if (isEdit) {
+    const p = allProjects.find(x => x.rowIndex === rowIndex);
+    if (p) {
+      sel.value = p.client;
+      document.getElementById('p-name').value = p.name;
+      document.getElementById('p-type').value = p.type || 'Hourly';
+      document.getElementById('p-rate').value = p.rate;
+      document.getElementById('p-status').value = p.status || 'Active';
+      document.getElementById('p-startdate').value = p.startDate;
+      document.getElementById('p-notes').value = p.notes;
+      document.getElementById('p-drivelink').value = p.driveLink;
+    }
+  } else {
+    sel.value = prefillClient || '';
+    document.getElementById('p-name').value = prefillName || '';
+    document.getElementById('p-type').value = 'Hourly';
+    document.getElementById('p-rate').value = '';
+    document.getElementById('p-status').value = 'Active';
+    document.getElementById('p-startdate').value = today();
+    document.getElementById('p-notes').value = '';
+    document.getElementById('p-drivelink').value = '';
+  }
+  openModal('project-modal');
+}
+
+async function saveProject() {
+  const client = document.getElementById('p-client').value;
+  const name   = document.getElementById('p-name').value.trim();
+  if (!client || !name) { showToast('Client and project name are required', 'error'); return; }
+  const row = [
+    client, name,
+    document.getElementById('p-type').value,
+    document.getElementById('p-rate').value.trim(),
+    document.getElementById('p-status').value,
+    document.getElementById('p-startdate').value,
+    document.getElementById('p-notes').value.trim(),
+    document.getElementById('p-drivelink').value.trim()
+  ];
+  try {
+    if (editingProject) {
+      await sheetsUpdate('projects', `A${editingProject}:H${editingProject}`, [row]);
+    } else {
+      await sheetsAppend('projects', [row]);
+    }
+    showToast('Project saved ✓', 'success');
+    closeModal('project-modal');
+    await loadProjects();
+    populateClientDropdowns();
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function deleteProject() {
+  if (!editingProject || !confirm('Delete this project?')) return;
+  try {
+    await sheetsClear('projects', `A${editingProject}:H${editingProject}`);
+    showToast('Project deleted');
+    closeModal('project-modal');
+    await loadProjects();
+    populateClientDropdowns();
+  } catch(e) { showToast('Delete failed', 'error'); }
+}
+
+// Legacy renderProjectManager kept as no-op for safety
+function renderProjectManager() {}
+
+
 
 function getProjectsForClient(clientName) {
   if (!clientName) return [];
@@ -2207,35 +2474,12 @@ function filterTimerProjects() {
 function handleProjectSelectChange(selectId) {
   const sel = document.getElementById(selectId);
   if (sel.value === '__new__') {
-    const name = prompt('Enter new project name:');
-    if (name && name.trim()) {
-      // Add to allProjects in memory and save to sheet
-      const clientSel = selectId === 't-project' ? document.getElementById('t-client').value
-                      : selectId === 'timer-project' ? document.getElementById('timer-client').value : '';
-      const trimmed = name.trim();
-      if (clientSel && !allProjects.find(p => p.client === clientSel && p.name === trimmed)) {
-        allProjects.push({ client: clientSel, name: trimmed, type: '', rate: '' });
-        sheetsAppend('projects', [[clientSel, trimmed, '', '']]).catch(() => {});
-      }
-      updateProjectSelect(selectId, clientSel, trimmed);
-    } else {
-      sel.value = '';
-    }
+    sel.value = '';
+    const clientSel = selectId === 't-project' ? document.getElementById('t-client').value
+                    : selectId === 'timer-project' ? document.getElementById('timer-client').value : '';
+    // Open the proper project modal, pre-filled with client
+    openProjectModal(null, clientSel, '');
   }
-}
-
-async function deleteProject(clientName, projectName) {
-  if (!confirm(`Delete project "${projectName}" for ${clientName}?\n\nThis removes it from the projects list only — time entries are not affected.`)) return;
-  const idx = allProjects.findIndex(p => p.client === clientName && p.name === projectName);
-  if (idx === -1) { showToast('Project not found', 'error'); return; }
-  // Find the row index in the sheet (idx + 2 because row 1 is header)
-  try {
-    await sheetsClear('projects', `A${idx+2}:D${idx+2}`);
-    allProjects.splice(idx, 1);
-    showToast('Project deleted ✓');
-    // Refresh dropdowns
-    populateClientDropdowns();
-  } catch(e) { showToast('Delete failed', 'error'); }
 }
 
 // ── INVOICE PROJECT DROPDOWN ──────────────────────────────────────────────
@@ -2807,13 +3051,15 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => {
     if (t.getAttribute('onclick') === `switchTab('${tab}')`) t.classList.add('active');
   });
+  if (tab === 'projects') { filterProjects(); populateProjectFilters(); }
+  if (tab === 'home') renderDashboard();
 }
 
 // ── MODAL HELPERS ─────────────────────────────────────────────────────────
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { ['client-modal','invoice-modal','time-modal','color-modal'].forEach(closeModal); }});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { ['client-modal','invoice-modal','time-modal','color-modal','project-modal'].forEach(closeModal); }});
 
 // ── UTILS ─────────────────────────────────────────────────────────────────
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
