@@ -1760,10 +1760,7 @@ function autofillClientCompany() {
   const match = allClients.find(c => c.company.toLowerCase() === companyVal)
              || allClients.find(c => c.company.toLowerCase().startsWith(companyVal) && companyVal.length >= 3);
   if (match) {
-    if (match.name)  document.getElementById('c-name').value  = match.name;
-    if (match.email) document.getElementById('c-email').value = match.email;
-    if (match.phone) document.getElementById('c-phone').value = match.phone;
-    if (match.rate)  document.getElementById('c-rate').value  = match.rate;
+    document.getElementById('c-company').value = match.company;
   }
 }
 
