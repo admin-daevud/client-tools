@@ -266,6 +266,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
 .pill-draft { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
 .pill-overdue { background: var(--red-bg); color: var(--red); }
 .pill-sent { background: var(--blue-bg); color: var(--blue); }
+.pill-w9 { background: var(--green-bg); color: var(--green); }
 
 /* ── FOLLOW UP INDICATOR ── */
 .followup-due { color: var(--red); font-weight: 500; }
@@ -663,11 +664,12 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             <th onclick="sortClients('followUpDate')">Follow Up ↕</th>
             <th>Last Contact</th>
             <th>Source</th>
+            <th onclick="sortClients('w9')">W9 ↕</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="clients-tbody">
-          <tr><td colspan="11" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+          <tr><td colspan="12" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -693,6 +695,11 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <option value="Paid">Paid</option>
           <option value="Overdue">Overdue</option>
         </select>
+        <select class="filter-select" id="invoice-w9-filter" onchange="filterInvoices()">
+          <option value="">W9: All</option>
+          <option value="yes">W9 on file</option>
+          <option value="no">No W9</option>
+        </select>
         <span class="count-badge" id="invoice-count">0 invoices</span>
       </div>
       <button class="btn btn-primary" onclick="openInvoiceModal()">+ New invoice</button>
@@ -708,12 +715,13 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
             <th onclick="sortInvoices('dueDate')">Due ↕</th>
             <th onclick="sortInvoices('amount')">Amount ↕</th>
             <th onclick="sortInvoices('status')">Status ↕</th>
+            <th onclick="sortInvoices('w9')">W9 ↕</th>
             <th>Notes</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="invoices-tbody">
-          <tr><td colspan="9" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:50px;color:var(--text-muted)"><span class="spinner"></span>Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -918,6 +926,13 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <div class="form-group"><label>Last Contacted</label><input type="date" id="c-last-contacted"></div>
         <div class="form-group"><label>Follow Up Date</label><input type="date" id="c-followup-date"></div>
         <div class="form-group"><label>Lead Source</label><input type="text" id="c-source" placeholder="Referral, LinkedIn, Reddit…"></div>
+        <div class="form-group" style="display:flex;flex-direction:column;justify-content:flex-end;gap:8px">
+          <label>W9 on File</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-muted)">
+            <input type="checkbox" id="c-w9" style="width:15px;height:15px;accent-color:var(--accent2);cursor:pointer">
+            <span>W9 received for this company</span>
+          </label>
+        </div>
         <div class="form-group full"><label>Follow Up Notes</label><textarea id="c-followup-notes" placeholder="What to discuss, next steps…"></textarea></div>
         <div class="form-group full"><label>Notes</label><textarea id="c-notes" placeholder="General notes, preferences…"></textarea></div>
         <div class="form-group full" id="c-projects-group" style="display:none">
@@ -1284,7 +1299,7 @@ const SHEET_ID  = '1HxBj_k2lHQFQYgd0wiLnpHHsUquRrNaMRqJaAT6gH7o';
 const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.modify';
 
 const SHEETS = {
-  clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource'] },
+  clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource','W9'] },
   invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
   time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes','Version'] },
   projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate','Status','StartDate','Notes','DriveLink'] },
@@ -1659,6 +1674,8 @@ async function importEmailFeedback(msgId) {
 // ── LOAD ALL ──────────────────────────────────────────────────────────────
 async function loadAll() {
   await Promise.all([loadClients(), loadInvoices(), loadTime(), loadProjects(), loadColor(), loadColorMeta()]);
+  enrichInvoicesWithW9();
+  renderInvoices(allInvoices);
   populateClientDropdowns();
   checkUnreadFollowUps();
   renderDashboard();
@@ -1669,13 +1686,13 @@ async function loadAll() {
 // ── CLIENTS ───────────────────────────────────────────────────────────────
 async function loadClients() {
   try {
-    const data = await sheetsGet('clients', 'A2:K1000');
+    const data = await sheetsGet('clients', 'A2:L1000');
     allClients = (data.values || []).map((row, i) => ({
       rowIndex: i + 2,
       name: row[0]||'', company: row[1]||'', email: row[2]||'', phone: row[3]||'',
       rate: row[4]||'', status: row[5]||'Prospect', notes: row[6]||'',
       lastContacted: row[7]||'', followUpDate: row[8]||'', followUpNotes: row[9]||'',
-      source: row[10]||''
+      source: row[10]||'', w9: row[11] === 'TRUE' || row[11] === 'true' || row[11] === '1'
     })).filter(c => c.name);
     renderClients(allClients);
   } catch(e) { showToast('Failed to load clients', 'error'); renderClients([]); }
@@ -1684,7 +1701,7 @@ async function loadClients() {
 function renderClients(list) {
   const tbody = document.getElementById('clients-tbody');
   document.getElementById('client-count').textContent = list.length + (list.length===1?' client':' clients');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet.</p></div></td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">◎</div><p>No clients yet.</p></div></td></tr>`; return; }
   const today = new Date(); today.setHours(0,0,0,0);
   tbody.innerHTML = list.map(c => {
     let fuClass = '', fuText = c.followUpDate || '—';
@@ -1710,6 +1727,7 @@ function renderClients(list) {
       <td class="${fuClass}">${fuText}</td>
       <td class="td-muted">${c.lastContacted||'—'}</td>
       <td class="td-muted">${esc(c.source)}</td>
+      <td>${c.w9 ? '<span class="pill pill-w9">✓ W9</span>' : '<span style="color:var(--text-dim);font-size:11px">—</span>'}</td>
       <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openClientModal(${c.rowIndex})">Edit</button></td>
     </tr>`;
   }).join('');
@@ -1724,6 +1742,10 @@ function filterClients() {
     return mq && ms;
   });
   if (clientSort) list = list.sort((a,b) => {
+    if (clientSort === 'w9') {
+      const va = a.w9 ? 1 : 0, vb = b.w9 ? 1 : 0;
+      return clientSortAsc ? va - vb : vb - va;
+    }
     const va = (a[clientSort]||'').toLowerCase(), vb = (b[clientSort]||'').toLowerCase();
     return clientSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
   });
@@ -1753,6 +1775,7 @@ function openClientModal(rowIndex) {
       document.getElementById('c-followup-date').value = c.followUpDate;
       document.getElementById('c-followup-notes').value = c.followUpNotes;
       document.getElementById('c-source').value = c.source;
+      document.getElementById('c-w9').checked = !!c.w9;
       // Populate projects dropdown
       const projects = getProjectsForClient(c.name);
       const grp = document.getElementById('c-projects-group');
@@ -1777,6 +1800,7 @@ function openClientModal(rowIndex) {
   } else {
     ['c-name','c-company','c-email','c-phone','c-rate','c-notes','c-last-contacted','c-followup-date','c-followup-notes','c-source'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('c-status').value = 'Prospect';
+    document.getElementById('c-w9').checked = false;
     document.getElementById('c-projects-group').style.display = 'none';
     document.getElementById('gmail-thread-panel').style.display = 'none';
     currentThreadClientEmail = '';
@@ -1804,11 +1828,12 @@ async function saveClient() {
     document.getElementById('c-last-contacted').value,
     followUpDate,
     document.getElementById('c-followup-notes').value.trim(),
-    document.getElementById('c-source').value.trim()
+    document.getElementById('c-source').value.trim(),
+    document.getElementById('c-w9').checked ? 'TRUE' : 'FALSE'
   ];
   try {
     if (editingClient) {
-      await sheetsUpdate('clients', `A${editingClient}:K${editingClient}`, [row]);
+      await sheetsUpdate('clients', `A${editingClient}:L${editingClient}`, [row]);
     } else {
       await sheetsAppend('clients', [row]);
     }
@@ -1823,7 +1848,7 @@ async function saveClient() {
 async function deleteClient() {
   if (!editingClient || !confirm('Delete this client?')) return;
   try {
-    await sheetsClear('clients', `A${editingClient}:K${editingClient}`);
+    await sheetsClear('clients', `A${editingClient}:L${editingClient}`);
     showToast('Client deleted');
     closeModal('client-modal');
     await loadClients();
@@ -1861,9 +1886,27 @@ async function loadInvoices() {
       date: row[3]||'', dueDate: row[4]||'', amount: parseFloat(row[5])||0,
       status: row[6]||'Draft', notes: row[7]||'', lineItems: row[8]||'[]'
     })).filter(i => i.number || i.client);
+    enrichInvoicesWithW9();
     renderInvoices(allInvoices);
     renderInvoiceStats();
   } catch(e) { showToast('Failed to load invoices', 'error'); renderInvoices([]); }
+}
+
+function enrichInvoicesWithW9() {
+  // Build a company->w9 map (company-level flag)
+  const companyW9 = {};
+  for (const c of allClients) {
+    if (c.company) {
+      // Once any client at a company has w9=true, the company has a W9
+      if (c.w9) companyW9[c.company.toLowerCase()] = true;
+      else if (companyW9[c.company.toLowerCase()] === undefined) companyW9[c.company.toLowerCase()] = false;
+    }
+  }
+  for (const inv of allInvoices) {
+    const clientRecord = allClients.find(c => c.name === inv.client);
+    const company = clientRecord?.company || '';
+    inv.w9 = company ? !!companyW9[company.toLowerCase()] : (clientRecord?.w9 || false);
+  }
 }
 
 function renderInvoiceStats() {
@@ -1882,40 +1925,50 @@ function renderInvoiceStats() {
 function renderInvoices(list) {
   const tbody = document.getElementById('invoices-tbody');
   document.getElementById('invoice-count').textContent = list.length + (list.length===1?' invoice':' invoices');
-  if (!list.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">◎</div><p>No invoices yet.</p></div></td></tr>`; return; }
+  if (!list.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">◎</div><p>No invoices yet.</p></div></td></tr>'; return; }
   const now = new Date(); now.setHours(0,0,0,0);
   tbody.innerHTML = list.map(inv => {
     let agingClass = '', agingLabel = '';
     if ((inv.status === 'Overdue' || inv.status === 'Sent') && inv.dueDate) {
       const days = Math.round((now - new Date(inv.dueDate+'T00:00:00')) / 86400000);
       if (days > 0) {
-        agingLabel = ` <span style="font-size:10px;color:${days>60?'var(--red)':days>30?'var(--yellow)':'var(--text-muted)'}">(${days}d overdue)</span>`;
+        agingLabel = ' <span style="font-size:10px;color:' + (days>60?'var(--red)':days>30?'var(--yellow)':'var(--text-muted)') + '">(' + days + 'd overdue)</span>';
         agingClass = days > 60 ? 'aging-90' : days > 30 ? 'aging-60' : 'aging-30';
       }
     }
-    return `<tr class="${agingClass}" onclick="openInvoiceModal(${inv.rowIndex})">
-      <td class="td-name">${esc(inv.number)}</td>
-      <td class="td-muted">${esc(inv.client)}</td>
-      <td class="td-muted">${esc(inv.project)}</td>
-      <td class="td-mono">${inv.date||'—'}</td>
-      <td class="td-mono">${inv.dueDate||'—'}${agingLabel}</td>
-      <td class="td-amount">${fmt(inv.amount)}</td>
-      <td><span class="pill pill-${inv.status.toLowerCase()}">${esc(inv.status)}</span></td>
-      <td class="td-muted" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(inv.notes)}</td>
-      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openInvoiceModal(${inv.rowIndex})">Edit</button></td>
-    </tr>`;
+    const w9Cell = inv.w9
+      ? '<span class="pill" style="background:var(--green-bg);color:var(--green)">&#10003; W9</span>'
+      : '<span style="color:var(--text-dim);font-size:11px">&#8212;</span>';
+    return '<tr class="' + agingClass + '" onclick="openInvoiceModal(' + inv.rowIndex + ')">'
+      + '<td class="td-name">' + esc(inv.number) + '</td>'
+      + '<td class="td-muted">' + esc(inv.client) + '</td>'
+      + '<td class="td-muted">' + esc(inv.project) + '</td>'
+      + '<td class="td-mono">' + (inv.date||'—') + '</td>'
+      + '<td class="td-mono">' + (inv.dueDate||'—') + agingLabel + '</td>'
+      + '<td class="td-amount">' + fmt(inv.amount) + '</td>'
+      + '<td><span class="pill pill-' + inv.status.toLowerCase() + '">' + esc(inv.status) + '</span></td>'
+      + '<td>' + w9Cell + '</td>'
+      + '<td class="td-muted" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(inv.notes) + '</td>'
+      + '<td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();openInvoiceModal(' + inv.rowIndex + ')">Edit</button></td>'
+      + '</tr>';
   }).join('');
 }
 
 function filterInvoices() {
   const q2 = document.getElementById('invoice-search').value.toLowerCase();
   const sf = document.getElementById('invoice-status-filter').value;
+  const wf = document.getElementById('invoice-w9-filter').value;
   let list = allInvoices.filter(i => {
     const mq = !q2 || [i.number,i.client,i.project,i.notes].some(v=>v.toLowerCase().includes(q2));
     const ms = !sf || i.status === sf;
-    return mq && ms;
+    const mw = !wf || (wf === 'yes' ? i.w9 : !i.w9);
+    return mq && ms && mw;
   });
   if (invoiceSort) list = list.sort((a,b) => {
+    if (invoiceSort === 'w9') {
+      const va = a.w9 ? 1 : 0, vb = b.w9 ? 1 : 0;
+      return invoiceSortAsc ? va - vb : vb - va;
+    }
     const va = String(a[invoiceSort]||'').toLowerCase(), vb = String(b[invoiceSort]||'').toLowerCase();
     return invoiceSortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
   });
