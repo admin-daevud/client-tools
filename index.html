@@ -911,7 +911,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group"><label>Name *</label><input type="text" id="c-name" placeholder="Jane Smith"></div>
+        <div class="form-group"><label>Name *</label><input type="text" id="c-name" placeholder="Jane Smith" oninput="autofillClientCompany()" list="c-name-list"><datalist id="c-name-list"></datalist></div>
         <div class="form-group"><label>Company</label><input type="text" id="c-company" placeholder="Acme Productions"></div>
         <div class="form-group"><label>Email</label><input type="email" id="c-email" placeholder="jane@acme.com"></div>
         <div class="form-group"><label>Phone</label><input type="tel" id="c-phone" placeholder="+1 (555) 000-0000"></div>
@@ -1754,6 +1754,17 @@ function filterClients() {
 
 function sortClients(f) { if (clientSort===f) clientSortAsc=!clientSortAsc; else { clientSort=f; clientSortAsc=true; } filterClients(); }
 
+function autofillClientCompany() {
+  const nameVal = document.getElementById('c-name').value.trim();
+  const match = allClients.find(c => c.name.toLowerCase() === nameVal.toLowerCase());
+  if (match && !editingClient) {
+    if (match.company) document.getElementById('c-company').value = match.company;
+    if (match.email)   document.getElementById('c-email').value   = match.email;
+    if (match.phone)   document.getElementById('c-phone').value   = match.phone;
+    if (match.rate)    document.getElementById('c-rate').value    = match.rate;
+  }
+}
+
 function openClientModal(rowIndex) {
   editingClient = rowIndex || null;
   const isEdit = !!rowIndex;
@@ -1804,6 +1815,9 @@ function openClientModal(rowIndex) {
     document.getElementById('c-projects-group').style.display = 'none';
     document.getElementById('gmail-thread-panel').style.display = 'none';
     currentThreadClientEmail = '';
+    // Populate name suggestions datalist
+    const dl = document.getElementById('c-name-list');
+    if (dl) dl.innerHTML = allClients.map(c => `<option value="${esc(c.name)}">`).join('');
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
@@ -3074,15 +3088,16 @@ function renderDashboard() {
         const daysOverdue = i.dueDate ? Math.round((now - new Date(i.dueDate+'T00:00:00')) / 86400000) : null;
         const agingLabel = daysOverdue === null ? '' : daysOverdue > 0 ? `${daysOverdue}d overdue` : daysOverdue === 0 ? 'Due today' : `Due in ${Math.abs(daysOverdue)}d`;
         const agingColor = daysOverdue > 60 ? 'var(--red)' : daysOverdue > 30 ? 'var(--yellow)' : 'var(--text-muted)';
-        return `<div class="dash-row" onclick="switchTab('invoices')">
-          <div class="dash-row-left">
+        return `<div class="dash-row" style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="switchTab('invoices')">
             <div class="dash-row-name">${esc(i.client)}${i.project?` — ${esc(i.project)}`:''}</div>
             <div class="dash-row-sub">${esc(i.number)}</div>
           </div>
-          <div class="dash-row-right">
+          <div class="dash-row-right" style="align-items:flex-end">
             <span style="font-size:12px;font-weight:500;color:var(--text)">${fmt(i.amount)}</span>
             <span style="font-size:10px;color:${agingColor}">${agingLabel || esc(i.status)}</span>
           </div>
+          <button onclick="markInvoicePaid(${i.rowIndex})" title="Mark as paid" style="background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted);cursor:pointer;font-size:11px;padding:3px 8px;white-space:nowrap;flex-shrink:0">✓ Paid</button>
         </div>`;
       }).join('')
     : `<div class="dash-empty">No open invoices — all clear ✓</div>`;
@@ -3103,43 +3118,55 @@ function renderDashboard() {
     ? followUps.map(c => {
         const label = c.diff < 0 ? `${Math.abs(c.diff)}d overdue` : c.diff === 0 ? 'Today' : c.diff === 1 ? 'Tomorrow' : `In ${c.diff}d`;
         const color = c.diff < 0 ? 'var(--red)' : c.diff <= 2 ? 'var(--yellow)' : 'var(--text-muted)';
-        return `<div class="dash-row" onclick="switchTab('clients')">
-          <div class="dash-row-left">
+        return `<div class="dash-row" style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="switchTab('clients')">
             <div class="dash-row-name">${esc(c.name)}${c.company?` · ${esc(c.company)}`:''}</div>
             <div class="dash-row-sub">${esc(c.followUpNotes)||'No notes'}</div>
           </div>
-          <div class="dash-row-right">
+          <div class="dash-row-right" style="align-items:flex-end">
             <span style="font-size:11px;font-weight:500;color:${color}">${label}</span>
           </div>
+          <button onclick="markFollowUpDone(${c.rowIndex})" title="Mark complete" style="background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted);cursor:pointer;font-size:11px;padding:3px 8px;white-space:nowrap;flex-shrink:0">✓ Done</button>
         </div>`;
       }).join('')
     : `<div class="dash-empty">No follow-ups in the next 14 days</div>`;
 
   // ── COLOR SESSIONS AWAITING FEEDBACK ──
   const awaitingSessions = allColor
-    .filter(c => c.approvalStatus === 'Awaiting Feedback' || c.approvalStatus === 'In Progress' || c.approvalStatus === 'Versioned Up')
+    .filter(c => c.approvalStatus === 'In Progress')
     .sort((a,b) => (b.date||'').localeCompare(a.date||''))
     .slice(0, 6);
   document.getElementById('dash-color-total').textContent = awaitingSessions.length ? `${awaitingSessions.length} active` : '';
   document.getElementById('dash-color').innerHTML = awaitingSessions.length
     ? awaitingSessions.map(c => {
-        const statusColor = c.approvalStatus === 'Awaiting Feedback' ? 'var(--yellow)' : c.approvalStatus === 'Versioned Up' ? 'var(--accent2)' : 'var(--blue)';
-        return `<div class="dash-row" onclick="switchTab('color')">
-          <div class="dash-row-left">
+        const statusColor = 'var(--blue)';
+        return `<div class="dash-row" style="display:flex;align-items:center;gap:8px">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="switchTab('color')">
             <div class="dash-row-name">${esc(c.client)}${c.project?` — ${esc(c.project)}`:''}</div>
             <div class="dash-row-sub">${esc(c.round)}${c.colorSpace?' · '+esc(c.colorSpace):''}</div>
           </div>
-          <div class="dash-row-right">
+          <div class="dash-row-right" style="align-items:flex-end;gap:4px">
             <span style="font-size:10px;font-weight:500;color:${statusColor}">${esc(c.approvalStatus)}</span>
             <span style="font-size:10px;color:var(--text-dim)">${esc(c.date)||''}</span>
           </div>
+          <button onclick="markColorSessionDone(${c.rowIndex})" title="Mark complete" style="background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text-muted);cursor:pointer;font-size:11px;padding:3px 8px;white-space:nowrap;flex-shrink:0">✓ Done</button>
         </div>`;
       }).join('')
-    : `<div class="dash-empty">No sessions awaiting feedback</div>`;
+    : `<div class="dash-empty">No sessions in progress</div>`;
 
   // ── RECENT UNBILLED TIME ──
+  // Exclude time entries whose client+project matches a Sent or Paid invoice
+  const billedKeys = new Set(
+    allInvoices
+      .filter(i => i.status === 'Sent' || i.status === 'Paid')
+      .map(i => `${i.client}||${i.project}`)
+  );
   const recentTime = allTime
-    .filter(t => t.amount > 0)
+    .filter(t => {
+      if (!t.amount) return false;
+      const key = `${t.client}||${t.project}`;
+      return !billedKeys.has(key);
+    })
     .sort((a,b) => (b.date||'').localeCompare(a.date||''))
     .slice(0, 6);
   const recentUnbilledTotal = recentTime.reduce((s,t)=>s+(parseFloat(t.amount)||0),0);
@@ -3158,6 +3185,45 @@ function renderDashboard() {
 
   // Update aging alerts
   updateAgingAlerts();
+}
+
+// ── DASHBOARD MARK-COMPLETE ACTIONS ───────────────────────────────────────
+async function markFollowUpDone(rowIndex) {
+  if (!confirm('Clear follow-up date for this client?')) return;
+  const c = allClients.find(x => x.rowIndex === rowIndex);
+  if (!c) return;
+  const row = [c.name, c.company, c.email, c.phone, c.rate, c.status, c.notes, c.lastContacted, '', '', c.source];
+  try {
+    await sheetsUpdate('clients', `A${rowIndex}:K${rowIndex}`, [row]);
+    showToast('Follow-up cleared ✓', 'success');
+    await loadClients();
+    renderDashboard();
+  } catch(e) { showToast('Update failed', 'error'); }
+}
+
+async function markInvoicePaid(rowIndex) {
+  if (!confirm('Mark this invoice as Paid?')) return;
+  const inv = allInvoices.find(x => x.rowIndex === rowIndex);
+  if (!inv) return;
+  const row = [inv.number, inv.client, inv.project, inv.date, inv.dueDate, inv.amount, 'Paid', inv.notes, inv.lineItems];
+  try {
+    await sheetsUpdate('invoices', `A${rowIndex}:I${rowIndex}`, [row]);
+    showToast('Invoice marked as Paid ✓', 'success');
+    await loadInvoices();
+    renderDashboard();
+  } catch(e) { showToast('Update failed', 'error'); }
+}
+
+async function markColorSessionDone(rowIndex) {
+  if (!confirm('Mark this color session as Delivered?')) return;
+  const c = allColor.find(x => x.rowIndex === rowIndex);
+  if (!c) return;
+  try {
+    await sheetsUpdate('color', `J${rowIndex}:J${rowIndex}`, [['Delivered']]);
+    showToast('Session marked as Delivered ✓', 'success');
+    await loadColor();
+    renderDashboard();
+  } catch(e) { showToast('Update failed', 'error'); }
 }
 
 // ── INVOICE AGING ALERTS ──────────────────────────────────────────────────
