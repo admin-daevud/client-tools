@@ -1755,9 +1755,12 @@ function filterClients() {
 function sortClients(f) { if (clientSort===f) clientSortAsc=!clientSortAsc; else { clientSort=f; clientSortAsc=true; } filterClients(); }
 
 function autofillClientCompany() {
-  const nameVal = document.getElementById('c-name').value.trim();
-  const match = allClients.find(c => c.name.toLowerCase() === nameVal.toLowerCase());
-  if (match && !editingClient) {
+  const nameVal = document.getElementById('c-name').value.trim().toLowerCase();
+  if (!nameVal || editingClient) return;
+  // Try exact match first, then starts-with
+  const match = allClients.find(c => c.name.toLowerCase() === nameVal)
+             || allClients.find(c => c.name.toLowerCase().startsWith(nameVal) && nameVal.length >= 3);
+  if (match) {
     if (match.company) document.getElementById('c-company').value = match.company;
     if (match.email)   document.getElementById('c-email').value   = match.email;
     if (match.phone)   document.getElementById('c-phone').value   = match.phone;
@@ -1817,7 +1820,7 @@ function openClientModal(rowIndex) {
     currentThreadClientEmail = '';
     // Populate name suggestions datalist
     const dl = document.getElementById('c-name-list');
-    if (dl) dl.innerHTML = allClients.map(c => `<option value="${esc(c.name)}">`).join('');
+    if (dl) dl.innerHTML = allClients.map(c => `<option value="${esc(c.name)}">${c.company ? esc(c.company) : ''}</option>`).join('');
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
