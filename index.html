@@ -1816,7 +1816,10 @@ function openClientModal(rowIndex) {
     currentThreadClientEmail = '';
     // Populate name suggestions datalist
     const dl = document.getElementById('c-name-list');
-    if (dl) dl.innerHTML = allClients.filter(c => c.company).map(c => `<option value="${esc(c.company)}">${esc(c.name)}</option>`).join('');
+    if (dl) {
+      const uniqueCompanies = [...new Set(allClients.filter(c => c.company).map(c => c.company))].sort();
+      dl.innerHTML = uniqueCompanies.map(co => `<option value="${esc(co)}"></option>`).join('');
+    }
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
