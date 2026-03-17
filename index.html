@@ -2455,12 +2455,16 @@ function openProjectModal(rowIndex, prefillClient, prefillName) {
   document.getElementById('project-modal-title').textContent = isEdit ? 'Edit project' : 'New project';
   document.getElementById('project-delete-btn').style.display = isEdit ? '' : 'none';
 
-  // Populate client dropdown
+  // Populate client dropdown — deduplicate by company name
   const sel = document.getElementById('p-client');
   sel.innerHTML = `<option value="">Select client…</option>`;
+  const seenCompanies = new Set();
   allClients.slice().sort((a,b)=>(a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+    const label = c.company || c.name;
+    if (seenCompanies.has(label)) return;
+    seenCompanies.add(label);
     const o = document.createElement('option');
-    o.value = c.name; o.textContent = c.company ? c.company : c.name;
+    o.value = c.name; o.textContent = label;
     sel.appendChild(o);
   });
 
@@ -2648,10 +2652,14 @@ function populateClientDropdowns() {
     if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = `<option value="">Select client…</option>`;
+    const seen = new Set();
     allClients.slice().sort((a,b) => (a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+      const label = c.company || c.name;
+      if (seen.has(label)) return;
+      seen.add(label);
       const o = document.createElement('option');
       o.value = c.name;
-      o.textContent = c.company ? c.company : c.name;
+      o.textContent = label;
       sel.appendChild(o);
     });
     if (cur) sel.value = cur;
