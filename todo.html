@@ -11,38 +11,22 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #faf9f7;
-    --surface: #ffffff;
-    --surface-2: #f3f2ef;
-    --border: rgba(0,0,0,0.10);
-    --border-mid: rgba(0,0,0,0.18);
-    --border-strong: rgba(0,0,0,0.28);
-    --text: #1a1917;
-    --text-2: #6b6a66;
-    --text-3: #a09f9a;
-    --red: #E24B4A;
-    --amber: #EF9F27;
-    --green: #1D9E75;
-    --red-bg: #FCEBEB;
-    --amber-bg: #FAEEDA;
-    --green-bg: #EAF3DE;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #181715;
-      --surface: #211f1c;
-      --surface-2: #2c2a26;
-      --border: rgba(255,255,255,0.08);
-      --border-mid: rgba(255,255,255,0.14);
-      --border-strong: rgba(255,255,255,0.22);
-      --text: #f0ede8;
-      --text-2: #9e9c96;
-      --text-3: #5e5d59;
-      --red-bg: #2d1717;
-      --amber-bg: #2b2010;
-      --green-bg: #0f2018;
-    }
+    --bg: #141414;
+    --surface: #1e1e1e;
+    --surface2: #272727;
+    --border: #333333;
+    --border2: #444444;
+    --text: #e8e6e0;
+    --text-muted: #888580;
+    --text-dim: #555250;
+    --red: #e05c4b;
+    --red-bg: #2e1a18;
+    --amber: #d4a840;
+    --amber-bg: #2e2510;
+    --green: #4caf7d;
+    --green-bg: #1a2e22;
+    --radius: 4px;
+    --radius2: 8px;
   }
 
   html { font-size: 16px; }
@@ -51,52 +35,112 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 0;
   }
 
   /* NAV */
-  nav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: var(--bg);
-    border-bottom: 0.5px solid var(--border);
-    padding: 0 2rem;
-    height: 52px;
+  .topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0 28px;
+    height: 52px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
-  .nav-brand {
-    font-family: 'DM Serif Display', serif;
-    font-size: 18px;
-    font-weight: 400;
+  .topbar-left { display: flex; align-items: center; gap: 20px; }
+  .wordmark {
+    font-family: 'Instrument Serif', serif;
+    font-size: 14px;
     color: var(--text);
-    text-decoration: none;
-    letter-spacing: -0.3px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400;
   }
-  .nav-brand span { color: var(--text-3); }
   .nav-back {
     font-size: 11px;
-    color: var(--text-3);
+    color: var(--text-dim);
     text-decoration: none;
     letter-spacing: 1px;
     text-transform: uppercase;
     transition: color 0.15s;
   }
   .nav-back:hover { color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .user-chip {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-ghost { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border2); }
+  .btn-ghost:hover { color: var(--text); border-color: #666; }
+  .btn-primary { background: var(--text); color: var(--bg); }
+  .btn-primary:hover { background: #fff; }
 
-  /* MAIN */
+  /* AUTH */
+  #auth-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 52px);
+    padding: 40px;
+  }
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 56px;
+    width: 100%;
+    max-width: 380px;
+    text-align: center;
+  }
+  .auth-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+  .auth-card p {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.7;
+    margin-bottom: 28px;
+    letter-spacing: 0.3px;
+  }
+
+  /* APP */
+  #app-section { display: none; }
+
   main {
     max-width: 600px;
     margin: 0 auto;
     padding: 2.5rem 1.5rem 4rem;
   }
 
-  .page-header { margin-bottom: 2rem; }
+  .page-header { margin-bottom: 1.75rem; }
   .page-header h1 {
     font-family: 'DM Serif Display', serif;
-    font-size: 36px;
+    font-size: 34px;
     font-weight: 400;
     color: var(--text);
     letter-spacing: -0.5px;
@@ -105,67 +149,79 @@
   }
   .page-header p {
     font-size: 11px;
-    color: var(--text-3);
+    color: var(--text-dim);
     letter-spacing: 2px;
     text-transform: uppercase;
   }
 
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 12px 14px;
+  }
+  .stat-label { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 500; color: var(--text); }
+  .stat-val.red   { color: var(--red); }
+  .stat-val.amber { color: var(--amber); }
+
   /* FORM */
   .form-card {
-    border: 0.5px solid var(--border);
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
-    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
     background: var(--surface);
   }
-  .input-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
+  .input-row { display: flex; gap: 8px; margin-bottom: 10px; }
   .input-row input[type=text] {
     flex: 1;
     font-family: 'DM Mono', monospace;
     font-size: 13px;
     padding: 9px 12px;
-    border: 0.5px solid var(--border-mid);
-    border-radius: 8px;
-    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--surface2);
     color: var(--text);
     outline: none;
     transition: border-color 0.15s;
   }
-  .input-row input[type=text]:focus { border-color: var(--border-strong); }
-  .input-row input[type=text]::placeholder { color: var(--text-3); }
+  .input-row input[type=text]:focus { border-color: #666; }
+  .input-row input[type=text]::placeholder { color: var(--text-dim); }
   .add-btn {
     font-family: 'DM Mono', monospace;
-    font-size: 13px;
-    padding: 9px 18px;
-    border: 0.5px solid var(--border-mid);
-    border-radius: 8px;
-    background: var(--surface);
-    color: var(--text);
+    font-size: 12px;
+    padding: 9px 16px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.12s, border-color 0.12s;
+    font-weight: 500;
+    transition: background 0.12s;
   }
-  .add-btn:hover { background: var(--surface-2); border-color: var(--border-strong); }
+  .add-btn:hover { background: #fff; }
   .add-btn:active { transform: scale(0.98); }
-  .meta-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
+  .add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .meta-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .meta-row select,
   .meta-row input[type=date],
   .meta-row input.cat-input {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     padding: 6px 10px;
-    border: 0.5px solid var(--border-mid);
-    border-radius: 8px;
-    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    background: var(--surface2);
     color: var(--text);
     outline: none;
     cursor: pointer;
@@ -174,9 +230,9 @@
   }
   .meta-row select:focus,
   .meta-row input[type=date]:focus,
-  .meta-row input.cat-input:focus { border-color: var(--border-strong); }
+  .meta-row input.cat-input:focus { border-color: #666; }
   .meta-row input.cat-input { width: 130px; cursor: text; }
-  .meta-row input.cat-input::placeholder { color: var(--text-3); }
+  .meta-row input.cat-input::placeholder { color: var(--text-dim); }
 
   /* TOOLBAR */
   .toolbar {
@@ -187,33 +243,29 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  .filters { display: flex; gap: 4px; }
+  .filters { display: flex; gap: 3px; }
   .filter-btn {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
-    padding: 5px 12px;
-    border: 0.5px solid transparent;
-    border-radius: 8px;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
     background: transparent;
-    color: var(--text-2);
+    color: var(--text-muted);
     cursor: pointer;
     letter-spacing: 0.5px;
     transition: all 0.12s;
   }
   .filter-btn:hover { color: var(--text); }
-  .filter-btn.active {
-    border-color: var(--border-mid);
-    background: var(--surface-2);
-    color: var(--text);
-  }
+  .filter-btn.active { border-color: var(--border2); background: var(--surface2); color: var(--text); }
   .sort-row { display: flex; align-items: center; gap: 6px; }
-  .sort-row label { font-size: 11px; color: var(--text-3); letter-spacing: 0.5px; }
+  .sort-row label { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
   .sort-row select {
     font-family: 'DM Mono', monospace;
     font-size: 11px;
     padding: 5px 9px;
-    border: 0.5px solid var(--border-mid);
-    border-radius: 8px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
     background: var(--surface);
     color: var(--text);
     outline: none;
@@ -227,312 +279,438 @@
     align-items: flex-start;
     gap: 10px;
     padding: 11px 14px;
-    border: 0.5px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
     background: var(--surface);
     transition: opacity 0.2s, border-color 0.15s;
     animation: slideIn 0.18s ease;
   }
   @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-5px); }
+    from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: none; }
   }
-  .item:hover { border-color: var(--border-mid); }
-  .item.done { opacity: 0.38; }
-  .item.overdue:not(.done) { border-color: #F09595; }
+  .item:hover { border-color: var(--border2); }
+  .item.done  { opacity: 0.35; }
+  .item.overdue:not(.done) { border-color: rgba(224,92,75,0.4); }
 
   .check-box {
-    width: 17px;
-    height: 17px;
-    border: 0.5px solid var(--border-strong);
-    border-radius: 4px;
+    width: 16px; height: 16px;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
     flex-shrink: 0;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 3px;
     transition: background 0.12s, border-color 0.12s;
-    background: var(--surface);
+    background: var(--surface2);
   }
   .check-box.checked { background: var(--text); border-color: var(--text); }
   .check-box svg { display: none; width: 9px; height: 9px; }
   .check-box.checked svg { display: block; }
 
   .prio-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px; height: 6px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-top: 5px;
+    margin-top: 6px;
   }
   .prio-high .prio-dot { background: var(--red); }
   .prio-med  .prio-dot { background: var(--amber); }
   .prio-low  .prio-dot { background: var(--green); }
 
   .item-body { flex: 1; min-width: 0; }
-  .item-text {
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.5;
-    word-break: break-word;
-  }
-  .item.done .item-text { text-decoration: line-through; color: var(--text-3); }
+  .item-text { font-size: 13px; color: var(--text); line-height: 1.5; word-break: break-word; }
+  .item.done .item-text { text-decoration: line-through; color: var(--text-dim); }
 
-  .item-meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 5px;
-    flex-wrap: wrap;
-  }
+  .item-meta { display: flex; align-items: center; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
   .cat-tag {
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    padding: 2px 8px;
-    border-radius: 3px;
-    background: var(--surface-2);
-    color: var(--text-2);
-    border: 0.5px solid var(--border);
+    font-size: 10px; letter-spacing: 0.5px;
+    padding: 2px 7px; border-radius: 3px;
+    background: var(--surface2); color: var(--text-muted);
+    border: 1px solid var(--border);
   }
-  .due-tag { font-size: 10px; letter-spacing: 0.3px; color: var(--text-3); }
+  .due-tag { font-size: 10px; letter-spacing: 0.3px; color: var(--text-dim); }
   .due-tag.overdue { color: var(--red); }
   .due-tag.today   { color: var(--amber); }
 
   .del-btn {
-    width: 22px;
-    height: 22px;
-    border: none;
-    background: transparent;
-    color: var(--text-3);
-    cursor: pointer;
+    width: 22px; height: 22px;
+    border: none; background: transparent;
+    color: var(--text-dim); cursor: pointer;
     font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.12s, color 0.12s;
-    line-height: 1;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 3px;
+    opacity: 0; transition: opacity 0.12s, color 0.12s;
+    line-height: 1; flex-shrink: 0;
   }
   .item:hover .del-btn { opacity: 1; }
-  .del-btn:hover { color: var(--text); }
+  .del-btn:hover { color: var(--red); }
 
   /* FOOTER */
   .footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 0.5px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 1rem; padding-top: 1rem;
+    border-top: 1px solid var(--border);
   }
-  .count { font-size: 11px; color: var(--text-3); letter-spacing: 0.5px; }
-  .footer-right { display: flex; align-items: center; gap: 10px; }
-  .saved-flash {
-    font-size: 10px;
-    color: var(--text-3);
-    letter-spacing: 1px;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .saved-flash.show { opacity: 1; }
+  .count { font-size: 11px; color: var(--text-dim); letter-spacing: 0.5px; }
+  .footer-right { display: flex; align-items: center; gap: 12px; }
+  .sync-status { font-size: 10px; color: var(--text-dim); letter-spacing: 1px; }
+  .sync-status.saving { color: var(--amber); }
+  .sync-status.saved  { color: var(--green); }
+  .sync-status.error  { color: var(--red); }
   .clear-btn {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--text-3);
-    background: none;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    padding: 0;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--text-dim); background: none; border: none;
+    cursor: pointer; letter-spacing: 0.5px; padding: 0;
     transition: color 0.12s;
   }
   .clear-btn:hover { color: var(--text); }
 
   .empty {
-    text-align: center;
-    padding: 2.5rem 0;
-    font-size: 12px;
-    color: var(--text-3);
-    letter-spacing: 1px;
-    border: 0.5px dashed var(--border-mid);
-    border-radius: 8px;
+    text-align: center; padding: 2.5rem 0;
+    font-size: 12px; color: var(--text-dim); letter-spacing: 1px;
+    border: 1px dashed var(--border2); border-radius: var(--radius);
   }
 
-  /* STATS BAR */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 1.5rem;
+  /* LOADING SPINNER */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--text-muted);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
   }
-  .stat {
-    background: var(--surface);
-    border: 0.5px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); font-size: 12px; letter-spacing: 0.3px;
+    padding: 9px 18px; border-radius: var(--radius2);
+    opacity: 0; transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none; white-space: nowrap; z-index: 999;
   }
-  .stat-label { font-size: 10px; color: var(--text-3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-  .stat-val { font-size: 22px; font-weight: 500; color: var(--text); }
-  .stat-val.red   { color: var(--red); }
-  .stat-val.amber { color: var(--amber); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { border-color: rgba(224,92,75,0.4); color: var(--red); }
+  .toast.success { border-color: rgba(76,175,125,0.4); color: var(--green); }
 </style>
 </head>
 <body>
 
-<nav>
-  <a class="nav-brand" href="/">daevud<span>.</span></a>
-  <a class="nav-back" href="/">← tools</a>
-</nav>
-
-<main>
-  <div class="page-header">
-    <h1>to do.</h1>
-    <p id="date-label">today</p>
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="wordmark">David Taylor</span>
+    <a class="nav-back" href="/">← tools</a>
   </div>
-
-  <div class="stats">
-    <div class="stat">
-      <div class="stat-label">active</div>
-      <div class="stat-val" id="stat-active">0</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">overdue</div>
-      <div class="stat-val red" id="stat-overdue">0</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">done today</div>
-      <div class="stat-val amber" id="stat-done">0</div>
-    </div>
+  <div class="topbar-right">
+    <div class="user-chip" id="user-chip" style="display:none">signed in</div>
+    <button class="btn btn-ghost" id="sign-out-btn" style="display:none;font-size:11px;padding:5px 10px" onclick="signOut()">Sign out</button>
   </div>
+</div>
 
-  <div class="form-card">
-    <div class="input-row">
-      <input type="text" id="new-task" placeholder="add a task..." maxlength="140" />
-      <button class="add-btn" onclick="addTask()">+ add</button>
-    </div>
-    <div class="meta-row">
-      <select id="new-prio">
-        <option value="med">— priority</option>
-        <option value="high">high</option>
-        <option value="med">medium</option>
-        <option value="low">low</option>
-      </select>
-      <input type="date" id="new-due" title="due date" />
-      <input type="text" class="cat-input" id="new-cat" placeholder="category" maxlength="30" list="cat-list" />
-      <datalist id="cat-list"></datalist>
-    </div>
+<!-- AUTH -->
+<div id="auth-section">
+  <div class="auth-card">
+    <h2>to do.</h2>
+    <p>Sign in with Google to sync your tasks across all devices.</p>
+    <button class="btn btn-primary" onclick="signIn()" style="width:100%;justify-content:center;padding:10px;">Continue with Google</button>
   </div>
+</div>
 
-  <div class="toolbar">
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('all',this)">all</button>
-      <button class="filter-btn" onclick="setFilter('active',this)">active</button>
-      <button class="filter-btn" onclick="setFilter('done',this)">done</button>
+<!-- APP -->
+<div id="app-section">
+  <main>
+    <div class="page-header">
+      <h1>to do.</h1>
+      <p id="date-label">today</p>
     </div>
-    <div class="sort-row">
-      <label>sort</label>
-      <select id="sort-sel" onchange="render()">
-        <option value="added">added</option>
-        <option value="due">due date</option>
-        <option value="priority">priority</option>
-      </select>
-    </div>
-  </div>
 
-  <div class="list" id="list"></div>
-
-  <div class="footer">
-    <span class="count" id="count"></span>
-    <div class="footer-right">
-      <span class="saved-flash" id="saved-flash">saved</span>
-      <button class="clear-btn" onclick="clearDone()">clear completed</button>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">active</div><div class="stat-val" id="stat-active">0</div></div>
+      <div class="stat"><div class="stat-label">overdue</div><div class="stat-val red" id="stat-overdue">0</div></div>
+      <div class="stat"><div class="stat-label">done</div><div class="stat-val amber" id="stat-done">0</div></div>
     </div>
-  </div>
-</main>
+
+    <div class="form-card">
+      <div class="input-row">
+        <input type="text" id="new-task" placeholder="add a task..." maxlength="200" />
+        <button class="add-btn" id="add-btn" onclick="addTask()">+ add</button>
+      </div>
+      <div class="meta-row">
+        <select id="new-prio">
+          <option value="med">— priority</option>
+          <option value="high">high</option>
+          <option value="med">medium</option>
+          <option value="low">low</option>
+        </select>
+        <input type="date" id="new-due" title="due date" />
+        <input type="text" class="cat-input" id="new-cat" placeholder="category" maxlength="30" list="cat-list" />
+        <datalist id="cat-list"></datalist>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all',this)">all</button>
+        <button class="filter-btn" onclick="setFilter('active',this)">active</button>
+        <button class="filter-btn" onclick="setFilter('done',this)">done</button>
+      </div>
+      <div class="sort-row">
+        <label>sort</label>
+        <select id="sort-sel" onchange="render()">
+          <option value="added">added</option>
+          <option value="due">due date</option>
+          <option value="priority">priority</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="list" id="list"><div class="empty"><span class="spinner"></span>loading…</div></div>
+
+    <div class="footer">
+      <span class="count" id="count"></span>
+      <div class="footer-right">
+        <span class="sync-status" id="sync-status"></span>
+        <button class="clear-btn" onclick="clearDone()">clear completed</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-const STORE = 'daevud_todo_v3';
-const PRIO_ORDER = { high: 0, med: 1, low: 2 };
-let tasks = load();
+const CLIENT_ID    = '942988921389-un6hlms925c4ej0cuss2et1no6r6grkf.apps.googleusercontent.com';
+const SHEET_ID     = '1HxBj_k2lHQFQYgd0wiLnpHHsUquRrNaMRqJaAT6gH7o';
+const SHEET_NAME   = 'todos';
+const SCOPES       = 'https://www.googleapis.com/auth/spreadsheets';
+const TODO_HEADERS = ['ID','Text','Done','Priority','DueDate','Category','Added'];
+const PRIO_ORDER   = { high: 0, med: 1, low: 2 };
+
+let accessToken;
+let tokenClient;
+let tasks = [];
 let filter = 'all';
-let flashTimer = null;
+let syncTimer = null;
 
-function today() { return new Date().toISOString().slice(0, 10); }
+// ── AUTH ──────────────────────────────────────────────────────────────────
+function initGSI() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { showToast('Auth error: ' + resp.error, 'error'); return; }
+      accessToken = resp.access_token;
+      await onSignedIn();
+    }
+  });
+}
 
-function load() {
+function signIn() { tokenClient.requestAccessToken(); }
+
+function signOut() {
+  google.accounts.oauth2.revoke(accessToken, () => {});
+  accessToken = null;
+  document.getElementById('auth-section').style.display = 'flex';
+  document.getElementById('app-section').style.display = 'none';
+  document.getElementById('sign-out-btn').style.display = 'none';
+  document.getElementById('user-chip').style.display = 'none';
+}
+
+async function onSignedIn() {
+  document.getElementById('auth-section').style.display = 'none';
+  document.getElementById('app-section').style.display = 'block';
+  document.getElementById('sign-out-btn').style.display = '';
+  document.getElementById('user-chip').style.display = '';
+  await ensureTodosSheet();
+  await loadTasks();
+}
+
+// ── SHEETS ────────────────────────────────────────────────────────────────
+function q(name) { return name.includes(' ') ? `'${name}'` : name; }
+
+async function sheetsGet(range) {
+  const r = `${q(SHEET_NAME)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsUpdate(range, values) {
+  const r = `${q(SHEET_NAME)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}?valueInputOption=RAW`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ range: r, majorDimension: 'ROWS', values })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsAppend(values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(q(SHEET_NAME))}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ majorDimension: 'ROWS', values })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function sheetsClear(range) {
+  const r = `${q(SHEET_NAME)}!${range}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(r)}:clear`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function ensureTodosSheet() {
   try {
-    const raw = localStorage.getItem(STORE);
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
-  return [
-    { id: 1, text: "review color grade notes", done: false, prio: "high", due: "", cat: "work", added: Date.now() },
-    { id: 2, text: "follow up with 38th & post", done: false, prio: "med", due: today(), cat: "outreach", added: Date.now() },
-    { id: 3, text: "update invoice template", done: true, prio: "low", due: "", cat: "admin", added: Date.now() }
-  ];
+    const data = await sheetsGet('A1:G1');
+    if (!data.values || data.values[0]?.join(',') !== TODO_HEADERS.join(',')) {
+      await sheetsUpdate('A1:G1', [TODO_HEADERS]);
+    }
+  } catch(e) {
+    // Sheet doesn't exist — create it
+    try {
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requests: [{ addSheet: { properties: { title: SHEET_NAME } } }] })
+      });
+      await sheetsUpdate('A1:G1', [TODO_HEADERS]);
+    } catch(e2) { console.warn('Sheet setup error:', e2); }
+  }
 }
 
-function save() {
-  try { localStorage.setItem(STORE, JSON.stringify(tasks)); } catch(e) {}
-  const fl = document.getElementById('saved-flash');
-  fl.classList.add('show');
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => fl.classList.remove('show'), 1400);
+// ── LOAD ──────────────────────────────────────────────────────────────────
+async function loadTasks() {
+  setSyncStatus('loading…', '');
+  try {
+    const data = await sheetsGet('A2:G2000');
+    const rows = data.values || [];
+    tasks = rows
+      .filter(r => r[0]) // skip blank rows
+      .map((r, i) => ({
+        id:    r[0] || '',
+        text:  r[1] || '',
+        done:  r[2] === 'TRUE',
+        prio:  r[3] || 'med',
+        due:   r[4] || '',
+        cat:   r[5] || '',
+        added: r[6] || '',
+        rowIndex: i + 2  // 1-indexed, row 1 is header
+      }));
+    setSyncStatus('', '');
+    render();
+    updateCatList();
+  } catch(e) {
+    setSyncStatus('load failed', 'error');
+    showToast('Could not load tasks', 'error');
+  }
 }
 
-function maxId() { return tasks.reduce((m, t) => Math.max(m, t.id), 0); }
+// ── WRITE ─────────────────────────────────────────────────────────────────
+function taskToRow(t) {
+  return [t.id, t.text, t.done ? 'TRUE' : 'FALSE', t.prio, t.due, t.cat, t.added];
+}
 
-function addTask() {
+async function addTask() {
   const inp = document.getElementById('new-task');
   const text = inp.value.trim();
   if (!text) return;
-  const prio = document.getElementById('new-prio').value || 'med';
-  const due  = document.getElementById('new-due').value || '';
-  const cat  = document.getElementById('new-cat').value.trim().toLowerCase() || '';
-  tasks.unshift({ id: maxId() + 1, text, done: false, prio, due, cat, added: Date.now() });
-  inp.value = '';
-  document.getElementById('new-cat').value = '';
-  document.getElementById('new-due').value = '';
-  document.getElementById('new-prio').value = 'med';
-  save(); render(); updateCatList();
+
+  const btn = document.getElementById('add-btn');
+  btn.disabled = true;
+
+  const prio  = document.getElementById('new-prio').value || 'med';
+  const due   = document.getElementById('new-due').value || '';
+  const cat   = document.getElementById('new-cat').value.trim().toLowerCase() || '';
+  const id    = 'td_' + Date.now();
+  const added = new Date().toISOString();
+
+  const task = { id, text, done: false, prio, due, cat, added, rowIndex: null };
+
+  setSyncStatus('saving…', 'saving');
+  try {
+    await sheetsAppend([taskToRow(task)]);
+    inp.value = '';
+    document.getElementById('new-cat').value = '';
+    document.getElementById('new-due').value = '';
+    document.getElementById('new-prio').value = 'med';
+    setSyncStatus('saved', 'saved');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => setSyncStatus('', ''), 1800);
+    await loadTasks();
+  } catch(e) {
+    setSyncStatus('save failed', 'error');
+    showToast('Could not save task', 'error');
+  }
+  btn.disabled = false;
 }
 
-function toggle(id) {
-  const t = tasks.find(t => t.id === id);
-  if (t) { t.done = !t.done; save(); render(); }
+async function toggle(rowIndex) {
+  const t = tasks.find(t => t.rowIndex === rowIndex);
+  if (!t) return;
+  t.done = !t.done;
+  render(); // optimistic
+  setSyncStatus('saving…', 'saving');
+  try {
+    await sheetsUpdate(`C${rowIndex}`, [[t.done ? 'TRUE' : 'FALSE']]);
+    setSyncStatus('saved', 'saved');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => setSyncStatus('', ''), 1800);
+  } catch(e) {
+    t.done = !t.done; // revert
+    render();
+    setSyncStatus('save failed', 'error');
+    showToast('Could not update task', 'error');
+  }
 }
 
-function del(id) {
-  tasks = tasks.filter(t => t.id !== id);
-  save(); render(); updateCatList();
+async function del(rowIndex) {
+  setSyncStatus('saving…', 'saving');
+  try {
+    await sheetsClear(`A${rowIndex}:G${rowIndex}`);
+    setSyncStatus('saved', 'saved');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => setSyncStatus('', ''), 1800);
+    await loadTasks();
+  } catch(e) {
+    setSyncStatus('save failed', 'error');
+    showToast('Could not delete task', 'error');
+  }
 }
 
-function clearDone() {
-  tasks = tasks.filter(t => !t.done);
-  save(); render();
+async function clearDone() {
+  const doneRows = tasks.filter(t => t.done);
+  if (!doneRows.length) return;
+  setSyncStatus('saving…', 'saving');
+  try {
+    await Promise.all(doneRows.map(t => sheetsClear(`A${t.rowIndex}:G${t.rowIndex}`)));
+    setSyncStatus('saved', 'saved');
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => setSyncStatus('', ''), 1800);
+    await loadTasks();
+  } catch(e) {
+    setSyncStatus('save failed', 'error');
+    showToast('Could not clear completed', 'error');
+  }
 }
 
-function setFilter(f, btn) {
-  filter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  render();
-}
-
-function getSorted(arr) {
-  const s = document.getElementById('sort-sel').value;
-  const copy = [...arr];
-  if (s === 'priority') copy.sort((a, b) => PRIO_ORDER[a.prio] - PRIO_ORDER[b.prio]);
-  else if (s === 'due') copy.sort((a, b) => {
-    if (!a.due && !b.due) return 0;
-    if (!a.due) return 1;
-    if (!b.due) return -1;
-    return a.due.localeCompare(b.due);
-  });
-  return copy;
-}
+// ── RENDER ────────────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().slice(0, 10); }
 
 function fmtDue(d) {
   if (!d) return null;
@@ -548,7 +726,20 @@ function fmtDate(s) {
 }
 
 function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getSorted(arr) {
+  const s = document.getElementById('sort-sel').value;
+  const copy = [...arr];
+  if (s === 'priority') copy.sort((a, b) => PRIO_ORDER[a.prio] - PRIO_ORDER[b.prio]);
+  else if (s === 'due') copy.sort((a, b) => {
+    if (!a.due && !b.due) return 0;
+    if (!a.due) return 1;
+    if (!b.due) return -1;
+    return a.due.localeCompare(b.due);
+  });
+  return copy;
 }
 
 function render() {
@@ -563,9 +754,9 @@ function render() {
     list.innerHTML = visible.map(task => {
       const due = fmtDue(task.due);
       const isOverdue = !task.done && task.due && task.due < t;
-      return `<div class="item${task.done ? ' done' : ''}${isOverdue ? ' overdue' : ''} prio-${task.prio}" id="item-${task.id}">
-        <div class="check-box${task.done ? ' checked' : ''}" onclick="toggle(${task.id})">
-          <svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5.5 4,7.5 8.5,2.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      return `<div class="item${task.done ? ' done' : ''}${isOverdue ? ' overdue' : ''} prio-${task.prio}">
+        <div class="check-box${task.done ? ' checked' : ''}" onclick="toggle(${task.rowIndex})">
+          <svg viewBox="0 0 10 10" fill="none"><polyline points="1.5,5.5 4,7.5 8.5,2.5" stroke="${task.done ? '#141414' : '#e8e6e0'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <div class="prio-dot" title="${task.prio} priority"></div>
         <div class="item-body">
@@ -575,7 +766,7 @@ function render() {
             ${due ? `<span class="due-tag ${due.cls}">${due.label}</span>` : ''}
           </div>` : ''}
         </div>
-        <button class="del-btn" onclick="del(${task.id})" title="remove">×</button>
+        <button class="del-btn" onclick="del(${task.rowIndex})" title="remove">×</button>
       </div>`;
     }).join('');
   }
@@ -583,11 +774,17 @@ function render() {
   const active  = tasks.filter(t => !t.done).length;
   const overdue = tasks.filter(t => !t.done && t.due && t.due < t).length;
   const done    = tasks.filter(t => t.done).length;
-
   document.getElementById('count').textContent = `${active} item${active === 1 ? '' : 's'} left`;
   document.getElementById('stat-active').textContent  = active;
   document.getElementById('stat-overdue').textContent = overdue;
   document.getElementById('stat-done').textContent    = done;
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
 }
 
 function updateCatList() {
@@ -595,9 +792,22 @@ function updateCatList() {
   document.getElementById('cat-list').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
 }
 
+function setSyncStatus(msg, cls) {
+  const el = document.getElementById('sync-status');
+  el.textContent = msg;
+  el.className = 'sync-status' + (cls ? ' ' + cls : '');
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
 function setDateLabel() {
   const d = new Date();
-  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const days   = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
   const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
   document.getElementById('date-label').textContent =
     `${days[d.getDay()]} — ${months[d.getMonth()]} ${d.getDate()}`;
@@ -608,8 +818,14 @@ document.getElementById('new-task').addEventListener('keydown', e => {
 });
 
 setDateLabel();
-render();
-updateCatList();
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+window.onload = () => {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client';
+  s.onload = initGSI;
+  document.head.appendChild(s);
+};
 </script>
 </body>
 </html>

@@ -552,6 +552,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <button class="nav-tab" onclick="switchTab('time')">Time</button>
       <button class="nav-tab" onclick="switchTab('projects')">Projects</button>
       <button class="nav-tab" onclick="switchTab('color')">Color</button>
+      <a class="nav-tab" href="todo.html" target="_blank" style="text-decoration:none">To Do ↗</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -1816,10 +1817,7 @@ function openClientModal(rowIndex) {
     currentThreadClientEmail = '';
     // Populate name suggestions datalist
     const dl = document.getElementById('c-name-list');
-    if (dl) {
-      const uniqueCompanies = [...new Set(allClients.filter(c => c.company).map(c => c.company))].sort();
-      dl.innerHTML = uniqueCompanies.map(co => `<option value="${esc(co)}"></option>`).join('');
-    }
+    if (dl) dl.innerHTML = allClients.filter(c => c.company).map(c => `<option value="${esc(c.company)}">${esc(c.name)}</option>`).join('');
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
@@ -2455,16 +2453,12 @@ function openProjectModal(rowIndex, prefillClient, prefillName) {
   document.getElementById('project-modal-title').textContent = isEdit ? 'Edit project' : 'New project';
   document.getElementById('project-delete-btn').style.display = isEdit ? '' : 'none';
 
-  // Populate client dropdown — deduplicate by company name
+  // Populate client dropdown
   const sel = document.getElementById('p-client');
   sel.innerHTML = `<option value="">Select client…</option>`;
-  const seenCompanies = new Set();
   allClients.slice().sort((a,b)=>(a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
-    const label = c.company || c.name;
-    if (seenCompanies.has(label)) return;
-    seenCompanies.add(label);
     const o = document.createElement('option');
-    o.value = c.name; o.textContent = label;
+    o.value = c.name; o.textContent = c.company ? c.company : c.name;
     sel.appendChild(o);
   });
 
@@ -2652,14 +2646,10 @@ function populateClientDropdowns() {
     if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = `<option value="">Select client…</option>`;
-    const seen = new Set();
     allClients.slice().sort((a,b) => (a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
-      const label = c.company || c.name;
-      if (seen.has(label)) return;
-      seen.add(label);
       const o = document.createElement('option');
       o.value = c.name;
-      o.textContent = label;
+      o.textContent = c.company ? c.company : c.name;
       sel.appendChild(o);
     });
     if (cur) sel.value = cur;
@@ -3345,9 +3335,8 @@ function printInvoice() {
   </head><body>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px">
       <div>
-        <div style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:4px">daevud color &amp; finishing LLC</div>
-        <div style="color:#888580;font-size:12px;margin-bottom:8px">David Taylor</div>
-        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037<br>www.daevud.com<br>EIN: 41-4956674</div>
+        <div style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">David Taylor</div>
+        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037<br>www.daevud.com</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
