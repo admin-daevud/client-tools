@@ -552,7 +552,6 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <button class="nav-tab" onclick="switchTab('time')">Time</button>
       <button class="nav-tab" onclick="switchTab('projects')">Projects</button>
       <button class="nav-tab" onclick="switchTab('color')">Color</button>
-      <a class="nav-tab" href="todo.html" target="_blank" style="text-decoration:none">To Do ↗</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -991,6 +990,17 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         </div>
         <div class="form-group"><label>Issue Date</label><input type="date" id="i-date"></div>
         <div class="form-group"><label>Due Date</label><input type="date" id="i-due-date"></div>
+        <div class="form-group"><label>EIN (optional)</label><input type="text" id="i-ein" placeholder="XX-XXXXXXX"></div>
+        <div class="form-group"><label>Bill To (c/o)</label>
+          <select id="i-billto-type" onchange="onBillToTypeChange()">
+            <option value="client">Contact name (default)</option>
+            <option value="custom">Custom recipient</option>
+          </select>
+        </div>
+        <div class="form-group full" id="i-billto-custom-group" style="display:none">
+          <label>Custom Recipient Name</label>
+          <input type="text" id="i-billto-custom" placeholder="e.g. Accounting Dept / Jane at Acme">
+        </div>
       </div>
       <div class="divider"></div>
       <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
@@ -1301,7 +1311,7 @@ const SCOPES    = 'https://www.googleapis.com/auth/spreadsheets https://www.goog
 
 const SHEETS = {
   clients:    { name: 'clients',    headers: ['Name','Company','Email','Phone','Rate/Budget','Status','Notes','LastContacted','FollowUpDate','FollowUpNotes','LeadSource','W9'] },
-  invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems'] },
+  invoices:   { name: 'invoices',   headers: ['Number','Client','Project','Date','DueDate','Amount','Status','Notes','LineItems','EIN','BillTo'] },
   time:       { name: 'time',       headers: ['Date','Client','Project','Type','Duration','Rate','Amount','Notes','Version'] },
   projects:   { name: 'projects',   headers: ['Client','ProjectName','Type','Rate','Status','StartDate','Notes','DriveLink'] },
   color:      { name: 'color',      headers: ['Date','Client','Project','ColorSpace','DeliveryColorSpace','ColorScience','LUTs','Effects','Software','ApprovalStatus','SessionNotes','ClientFeedback','Round','InvoiceRef','DriveLink'] },
@@ -1817,7 +1827,10 @@ function openClientModal(rowIndex) {
     currentThreadClientEmail = '';
     // Populate name suggestions datalist
     const dl = document.getElementById('c-name-list');
-    if (dl) dl.innerHTML = allClients.filter(c => c.company).map(c => `<option value="${esc(c.company)}">${esc(c.name)}</option>`).join('');
+    if (dl) {
+      const uniqueCompanies = [...new Set(allClients.filter(c => c.company).map(c => c.company))].sort();
+      dl.innerHTML = uniqueCompanies.map(co => `<option value="${esc(co)}"></option>`).join('');
+    }
   }
 
   document.getElementById('c-followup-date').addEventListener('change', function() {
@@ -1898,7 +1911,8 @@ async function loadInvoices() {
       rowIndex: i + 2,
       number: row[0]||'', client: row[1]||'', project: row[2]||'',
       date: row[3]||'', dueDate: row[4]||'', amount: parseFloat(row[5])||0,
-      status: row[6]||'Draft', notes: row[7]||'', lineItems: row[8]||'[]'
+      status: row[6]||'Draft', notes: row[7]||'', lineItems: row[8]||'[]',
+      ein: row[9]||'', billTo: row[10]||''
     })).filter(i => i.number || i.client);
     enrichInvoicesWithW9();
     renderInvoices(allInvoices);
@@ -2010,10 +2024,22 @@ function openInvoiceModal(rowIndex) {
       document.getElementById('i-date').value = inv.date;
       document.getElementById('i-due-date').value = inv.dueDate;
       document.getElementById('i-notes').value = inv.notes;
+      document.getElementById('i-ein').value = inv.ein || '';
+      if (inv.billTo && inv.billTo !== inv.client) {
+        document.getElementById('i-billto-type').value = 'custom';
+        document.getElementById('i-billto-custom').value = inv.billTo;
+        document.getElementById('i-billto-custom-group').style.display = '';
+      } else {
+        document.getElementById('i-billto-type').value = 'client';
+        document.getElementById('i-billto-custom').value = '';
+        document.getElementById('i-billto-custom-group').style.display = 'none';
+      }
       try { JSON.parse(inv.lineItems).forEach(li => addLineItem(li)); } catch(e) { addLineItem(); }
     }
   } else {
-    ['i-notes'].forEach(id => document.getElementById(id).value = '');
+    ['i-notes','i-ein','i-billto-custom'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('i-billto-type').value = 'client';
+    document.getElementById('i-billto-custom-group').style.display = 'none';
     document.getElementById('i-client').value = '';
     document.getElementById('i-project').innerHTML = '<option value="">Select project…</option>';
     document.getElementById('i-status').value = 'Draft';
@@ -2093,6 +2119,9 @@ async function saveInvoice() {
   if (!client) { showToast('Client is required', 'error'); return; }
   const items = getLineItems();
   const amount = items.reduce((s,i) => s + i.total, 0);
+  const ein = document.getElementById('i-ein').value.trim();
+  const billToType = document.getElementById('i-billto-type').value;
+  const billTo = billToType === 'custom' ? document.getElementById('i-billto-custom').value.trim() : '';
   const row = [
     document.getElementById('i-number').value.trim(),
     client,
@@ -2102,10 +2131,12 @@ async function saveInvoice() {
     amount,
     document.getElementById('i-status').value,
     document.getElementById('i-notes').value.trim(),
-    JSON.stringify(items)
+    JSON.stringify(items),
+    ein,
+    billTo
   ];
   try {
-    if (editingInvoice) await sheetsUpdate('invoices', `A${editingInvoice}:I${editingInvoice}`, [row]);
+    if (editingInvoice) await sheetsUpdate('invoices', `A${editingInvoice}:K${editingInvoice}`, [row]);
     else await sheetsAppend('invoices', [row]);
     showToast('Invoice saved ✓', 'success');
     closeModal('invoice-modal');
@@ -2453,12 +2484,16 @@ function openProjectModal(rowIndex, prefillClient, prefillName) {
   document.getElementById('project-modal-title').textContent = isEdit ? 'Edit project' : 'New project';
   document.getElementById('project-delete-btn').style.display = isEdit ? '' : 'none';
 
-  // Populate client dropdown
+  // Populate client dropdown — deduplicate by company name
   const sel = document.getElementById('p-client');
   sel.innerHTML = `<option value="">Select client…</option>`;
+  const seenCompanies = new Set();
   allClients.slice().sort((a,b)=>(a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+    const label = c.company || c.name;
+    if (seenCompanies.has(label)) return;
+    seenCompanies.add(label);
     const o = document.createElement('option');
-    o.value = c.name; o.textContent = c.company ? c.company : c.name;
+    o.value = c.name; o.textContent = label;
     sel.appendChild(o);
   });
 
@@ -2579,6 +2614,11 @@ function handleProjectSelectChange(selectId) {
 }
 
 // ── INVOICE PROJECT DROPDOWN ──────────────────────────────────────────────
+function onBillToTypeChange() {
+  const type = document.getElementById('i-billto-type').value;
+  document.getElementById('i-billto-custom-group').style.display = type === 'custom' ? '' : 'none';
+}
+
 function onInvoiceClientChange() {
   const client = document.getElementById('i-client').value;
   const sel = document.getElementById('i-project');
@@ -2646,10 +2686,14 @@ function populateClientDropdowns() {
     if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = `<option value="">Select client…</option>`;
+    const seen = new Set();
     allClients.slice().sort((a,b) => (a.company||a.name).localeCompare(b.company||b.name)).forEach(c => {
+      const label = c.company || c.name;
+      if (seen.has(label)) return;
+      seen.add(label);
       const o = document.createElement('option');
       o.value = c.name;
-      o.textContent = c.company ? c.company : c.name;
+      o.textContent = label;
       sel.appendChild(o);
     });
     if (cur) sel.value = cur;
@@ -3205,9 +3249,9 @@ async function markInvoicePaid(rowIndex) {
   if (!confirm('Mark this invoice as Paid?')) return;
   const inv = allInvoices.find(x => x.rowIndex === rowIndex);
   if (!inv) return;
-  const row = [inv.number, inv.client, inv.project, inv.date, inv.dueDate, inv.amount, 'Paid', inv.notes, inv.lineItems];
+  const row = [inv.number, inv.client, inv.project, inv.date, inv.dueDate, inv.amount, 'Paid', inv.notes, inv.lineItems, inv.ein||'', inv.billTo||''];
   try {
-    await sheetsUpdate('invoices', `A${rowIndex}:I${rowIndex}`, [row]);
+    await sheetsUpdate('invoices', `A${rowIndex}:K${rowIndex}`, [row]);
     showToast('Invoice marked as Paid ✓', 'success');
     await loadInvoices();
     renderDashboard();
@@ -3297,8 +3341,8 @@ function printInvoice() {
   // Work with either a saved invoice or the current modal state
   let inv = editingInvoice ? allInvoices.find(x => x.rowIndex === editingInvoice) : null;
   if (!inv) {
-    // Build a temporary invoice from current modal fields
     const items = getLineItems();
+    const billToType = document.getElementById('i-billto-type').value;
     inv = {
       number: document.getElementById('i-number').value || '—',
       client: document.getElementById('i-client').value || '—',
@@ -3307,12 +3351,16 @@ function printInvoice() {
       dueDate: document.getElementById('i-due-date').value || '',
       status: document.getElementById('i-status').value || 'Draft',
       notes: document.getElementById('i-notes').value || '',
-      lineItems: JSON.stringify(items)
+      lineItems: JSON.stringify(items),
+      ein: document.getElementById('i-ein').value || '',
+      billTo: billToType === 'custom' ? document.getElementById('i-billto-custom').value : ''
     };
   }
   // Look up company name from CRM
   const clientRecord = allClients.find(c => c.name === inv.client);
   inv.company = clientRecord?.company || '';
+  // Resolve Bill To line: custom > client name > company fallback
+  const billToName = inv.billTo || inv.client;
   let items = [];
   try { items = JSON.parse(inv.lineItems); } catch(e) { items = getLineItems(); }
   const linesHTML = items.map(li => `
@@ -3336,7 +3384,7 @@ function printInvoice() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px">
       <div>
         <div style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">David Taylor</div>
-        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037<br>www.daevud.com</div>
+        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037<br>www.daevud.com${inv.ein ? `<br>EIN: ${inv.ein}` : ''}</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
@@ -3347,7 +3395,7 @@ function printInvoice() {
     <div style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #e2e0d8">
       <div style="font-size:9px;font-family:monospace;text-transform:uppercase;letter-spacing:0.1em;color:#8a8880;margin-bottom:6px">Bill To</div>
       <div style="font-size:15px;font-weight:500">${inv.company || inv.client}</div>
-      ${inv.company ? `<div style="color:#8a8880;font-size:12px;margin-top:2px">c/o ${inv.client}</div>` : ''}
+      <div style="color:#8a8880;font-size:12px;margin-top:2px">c/o ${billToName}</div>
       ${inv.project ? `<div style="color:#8a8880;font-size:12px;margin-top:2px">${inv.project}</div>` : ''}
     </div>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px">
