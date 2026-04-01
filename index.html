@@ -1906,7 +1906,7 @@ async function createCalendarReminder(clientName, dateStr, notes) {
 // ── INVOICES ──────────────────────────────────────────────────────────────
 async function loadInvoices() {
   try {
-    const data = await sheetsGet('invoices', 'A2:I1000');
+    const data = await sheetsGet('invoices', 'A2:K1000');
     allInvoices = (data.values || []).map((row, i) => ({
       rowIndex: i + 2,
       number: row[0]||'', client: row[1]||'', project: row[2]||'',
@@ -2024,7 +2024,7 @@ function openInvoiceModal(rowIndex) {
       document.getElementById('i-date').value = inv.date;
       document.getElementById('i-due-date').value = inv.dueDate;
       document.getElementById('i-notes').value = inv.notes;
-      document.getElementById('i-ein').value = inv.ein || '';
+      document.getElementById('i-ein').value = inv.ein || '41-4956674';
       if (inv.billTo && inv.billTo !== inv.client) {
         document.getElementById('i-billto-type').value = 'custom';
         document.getElementById('i-billto-custom').value = inv.billTo;
@@ -2037,7 +2037,8 @@ function openInvoiceModal(rowIndex) {
       try { JSON.parse(inv.lineItems).forEach(li => addLineItem(li)); } catch(e) { addLineItem(); }
     }
   } else {
-    ['i-notes','i-ein','i-billto-custom'].forEach(id => document.getElementById(id).value = '');
+    ['i-notes','i-billto-custom'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('i-ein').value = '41-4956674';
     document.getElementById('i-billto-type').value = 'client';
     document.getElementById('i-billto-custom-group').style.display = 'none';
     document.getElementById('i-client').value = '';
