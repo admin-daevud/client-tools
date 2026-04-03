@@ -552,6 +552,7 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
       <button class="nav-tab" onclick="switchTab('time')">Time</button>
       <button class="nav-tab" onclick="switchTab('projects')">Projects</button>
       <button class="nav-tab" onclick="switchTab('color')">Color</button>
+      <a href="https://tools.daevud.com/todo.html" class="nav-tab" style="text-decoration:none">To Do</a>
     </nav>
   </div>
   <div class="topbar-right">
@@ -3390,7 +3391,6 @@ function printInvoice() {
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
         <div style="font-size:11px;color:#8a8880;margin-top:6px;font-family:monospace">Issued: ${inv.date||'—'}<br>Due: ${inv.dueDate||'—'}</div>
-        <div style="margin-top:10px"><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;background:${inv.status==='Paid'?'#e8f5ef':inv.status==='Overdue'?'#fdf0ee':'#f0efe9'};color:${inv.status==='Paid'?'#2d6a4f':inv.status==='Overdue'?'#c0392b':'#8a8880'}">${inv.status}</span></div>
       </div>
     </div>
     <div style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #e2e0d8">
