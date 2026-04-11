@@ -992,6 +992,10 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
         <div class="form-group"><label>Issue Date</label><input type="date" id="i-date"></div>
         <div class="form-group"><label>Due Date</label><input type="date" id="i-due-date"></div>
         <div class="form-group"><label>EIN (optional)</label><input type="text" id="i-ein" placeholder="XX-XXXXXXX"></div>
+        <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;padding-top:4px">
+          <input type="checkbox" id="i-show-website" style="width:14px;height:14px;accent-color:var(--accent2);cursor:pointer;margin:0">
+          <label for="i-show-website" style="margin:0;cursor:pointer;font-size:12px;color:var(--text-muted)">Include website on invoice</label>
+        </div>
         <div class="form-group"><label>Bill To (c/o)</label>
           <select id="i-billto-type" onchange="onBillToTypeChange()">
             <option value="client">Contact name (default)</option>
@@ -3361,6 +3365,7 @@ function printInvoice() {
   // Look up company name from CRM
   const clientRecord = allClients.find(c => c.name === inv.client);
   inv.company = clientRecord?.company || '';
+  const showWebsite = document.getElementById('i-show-website')?.checked || false;
   // Resolve Bill To line: custom > client name > company fallback
   const billToName = inv.billTo || inv.client;
   let items = [];
@@ -3386,7 +3391,7 @@ function printInvoice() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:48px">
       <div>
         <div style="font-family:'Instrument Serif',serif;font-size:24px;margin-bottom:8px">David Taylor</div>
-        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037${inv.ein ? `<br>EIN: ${inv.ein}` : ''}</div>
+        <div style="color:#888580;font-size:12px;line-height:1.8">daevud@gmail.com<br>303/513/5037${showWebsite ? '<br>www.daevud.com' : ''}${inv.ein ? `<br>EIN: ${inv.ein}` : ''}</div>
       </div>
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
