@@ -1006,6 +1006,10 @@ td { padding: 11px 14px; font-size: 12px; vertical-align: middle; }
           <label>Custom Recipient Name</label>
           <input type="text" id="i-billto-custom" placeholder="e.g. Accounting Dept / Jane at Acme">
         </div>
+        <div class="form-group">
+          <label>PO # (optional)</label>
+          <input type="text" id="i-po" placeholder="e.g. PO-2024-0042">
+        </div>
       </div>
       <div class="divider"></div>
       <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
@@ -1911,13 +1915,13 @@ async function createCalendarReminder(clientName, dateStr, notes) {
 // ── INVOICES ──────────────────────────────────────────────────────────────
 async function loadInvoices() {
   try {
-    const data = await sheetsGet('invoices', 'A2:K1000');
+    const data = await sheetsGet('invoices', 'A2:L1000');
     allInvoices = (data.values || []).map((row, i) => ({
       rowIndex: i + 2,
       number: row[0]||'', client: row[1]||'', project: row[2]||'',
       date: row[3]||'', dueDate: row[4]||'', amount: parseFloat(row[5])||0,
       status: row[6]||'Draft', notes: row[7]||'', lineItems: row[8]||'[]',
-      ein: row[9]||'', billTo: row[10]||''
+      ein: row[9]||'', billTo: row[10]||'', po: row[11]||''
     })).filter(i => i.number || i.client);
     enrichInvoicesWithW9();
     renderInvoices(allInvoices);
@@ -2039,10 +2043,11 @@ function openInvoiceModal(rowIndex) {
         document.getElementById('i-billto-custom').value = '';
         document.getElementById('i-billto-custom-group').style.display = 'none';
       }
+      document.getElementById('i-po').value = inv.po || '';
       try { JSON.parse(inv.lineItems).forEach(li => addLineItem(li)); } catch(e) { addLineItem(); }
     }
   } else {
-    ['i-notes','i-billto-custom'].forEach(id => document.getElementById(id).value = '');
+    ['i-notes','i-billto-custom','i-po'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('i-ein').value = '41-4956674';
     document.getElementById('i-billto-type').value = 'client';
     document.getElementById('i-billto-custom-group').style.display = 'none';
@@ -2128,6 +2133,7 @@ async function saveInvoice() {
   const ein = document.getElementById('i-ein').value.trim();
   const billToType = document.getElementById('i-billto-type').value;
   const billTo = billToType === 'custom' ? document.getElementById('i-billto-custom').value.trim() : '';
+  const po = document.getElementById('i-po').value.trim();
   const row = [
     document.getElementById('i-number').value.trim(),
     client,
@@ -2139,10 +2145,11 @@ async function saveInvoice() {
     document.getElementById('i-notes').value.trim(),
     JSON.stringify(items),
     ein,
-    billTo
+    billTo,
+    po
   ];
   try {
-    if (editingInvoice) await sheetsUpdate('invoices', `A${editingInvoice}:K${editingInvoice}`, [row]);
+    if (editingInvoice) await sheetsUpdate('invoices', `A${editingInvoice}:L${editingInvoice}`, [row]);
     else await sheetsAppend('invoices', [row]);
     showToast('Invoice saved ✓', 'success');
     closeModal('invoice-modal');
@@ -3255,9 +3262,9 @@ async function markInvoicePaid(rowIndex) {
   if (!confirm('Mark this invoice as Paid?')) return;
   const inv = allInvoices.find(x => x.rowIndex === rowIndex);
   if (!inv) return;
-  const row = [inv.number, inv.client, inv.project, inv.date, inv.dueDate, inv.amount, 'Paid', inv.notes, inv.lineItems, inv.ein||'', inv.billTo||''];
+  const row = [inv.number, inv.client, inv.project, inv.date, inv.dueDate, inv.amount, 'Paid', inv.notes, inv.lineItems, inv.ein||'', inv.billTo||'', inv.po||''];
   try {
-    await sheetsUpdate('invoices', `A${rowIndex}:K${rowIndex}`, [row]);
+    await sheetsUpdate('invoices', `A${rowIndex}:L${rowIndex}`, [row]);
     showToast('Invoice marked as Paid ✓', 'success');
     await loadInvoices();
     renderDashboard();
@@ -3359,7 +3366,8 @@ function printInvoice() {
       notes: document.getElementById('i-notes').value || '',
       lineItems: JSON.stringify(items),
       ein: document.getElementById('i-ein').value || '',
-      billTo: billToType === 'custom' ? document.getElementById('i-billto-custom').value : ''
+      billTo: billToType === 'custom' ? document.getElementById('i-billto-custom').value : '',
+      po: document.getElementById('i-po').value || ''
     };
   }
   // Look up company name from CRM
@@ -3395,7 +3403,7 @@ function printInvoice() {
       </div>
       <div style="text-align:right">
         <div style="font-family:'Instrument Serif',serif;font-size:26px;color:#1a1916">${inv.number}</div>
-        <div style="font-size:11px;color:#8a8880;margin-top:6px;font-family:monospace">Issued: ${inv.date||'—'}<br>Due: ${inv.dueDate||'—'}</div>
+        <div style="font-size:11px;color:#8a8880;margin-top:6px;font-family:monospace">Issued: ${inv.date||'—'}<br>Due: ${inv.dueDate||'—'}${inv.po ? `<br>PO: ${inv.po}` : ''}</div>
       </div>
     </div>
     <div style="margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #e2e0d8">
